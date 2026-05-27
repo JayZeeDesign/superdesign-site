@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LLM Application Architecture: A Founder's Guide to Building with LLMs (2026)</title>
+<meta name="description" content="A practical, founder-focused guide to LLM application architecture. Model choice, prompt assembly, RAG, structured output, evals, cost and latency — written for early-stage AI product teams.">
+<link rel="canonical" href="https://jayzeedesign.github.io/superdesign-site/build-with-llms/">
+<meta name="theme-color" content="#0b0d12">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Application Architecture: A Founder's Guide to Building with LLMs (2026)">
+<meta property="og:description" content="The seven layers of an LLM application — model, prompts, retrieval, structured output, evals, cost, latency — for early-stage AI founders.">
+<meta property="og:url" content="https://jayzeedesign.github.io/superdesign-site/build-with-llms/">
+<meta property="og:site_name" content="Superdesign">
+<meta property="og:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LLM application architecture — Superdesign pillar guide">
+<meta property="article:published_time" content="2026-05-27">
+<meta property="article:modified_time" content="2026-05-27">
+<meta property="article:section" content="LLM Applications">
+<meta property="article:tag" content="LLM applications">
+<meta property="article:tag" content="AI engineering">
+<meta property="article:tag" content="RAG">
+<meta property="article:tag" content="LLM evals">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="LLM Application Architecture (2026): A Founder's Guide">
+<meta name="twitter:description" content="Model, prompts, retrieval, structured output, evals, cost, latency — the LLM stack for early-stage AI teams.">
+<meta name="twitter:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preload" as="style" href="../styles.css">
+<link rel="stylesheet" href="../styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "LLM Application Architecture: A Founder's Guide to Building with LLMs (2026)",
+  "description": "A practical, founder-focused guide to LLM application architecture. Model choice, prompt assembly, RAG, structured output, evals, cost and latency — written for early-stage AI product teams.",
+  "datePublished": "2026-05-27",
+  "dateModified": "2026-05-27",
+  "inLanguage": "en",
+  "url": "https://jayzeedesign.github.io/superdesign-site/build-with-llms/",
+  "mainEntityOfPage": "https://jayzeedesign.github.io/superdesign-site/build-with-llms/",
+  "image": "https://jayzeedesign.github.io/superdesign-site/og.svg",
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Early-stage founders building AI products"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "about": [
+    {"@type": "Thing", "name": "LLM application architecture"},
+    {"@type": "Thing", "name": "Retrieval-augmented generation"},
+    {"@type": "Thing", "name": "Prompt engineering"},
+    {"@type": "Thing", "name": "Large language models"}
+  ],
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".tldr", ".definition", ".faq"]
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is LLM application architecture?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "LLM application architecture is the set of components and data flows that turn a large language model into a reliable product feature. The minimum stack is input handling, prompt assembly, model call, output validation, and observability. Retrieval, caching, evals, and orchestration layer on as the product matures. The model is one component in a system, not the system itself."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should I use RAG versus fine-tuning?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use retrieval-augmented generation when the answer depends on facts that change or are too large to fit in a system prompt — documentation, ticket history, product catalogs. Use fine-tuning when you need a consistent style, format, or behavior that prompting cannot reliably produce. Most early-stage teams need RAG, not fine-tuning. Try prompting and few-shot examples first; reach for fine-tuning only after evals show prompting plateaued."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which LLM should I choose for production?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "As of mid-2026 the realistic defaults are Claude Sonnet 4.6 or Opus 4.7 for tool-use, long context, and writing quality; GPT-5 for raw reasoning and broad ecosystem support; Gemini 2.5 Pro for multimodal and Google Cloud-native stacks. Pick by running your own evals on 30 to 100 real tasks. Vendor benchmarks are marketing; your eval set is the only signal that matters."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I get structured output from an LLM?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use the native structured-output features of your model: OpenAI's response_format with a JSON Schema, Anthropic's tool-use as a typed return channel, or constrained decoding libraries like Outlines and Instructor. Always validate the parsed output with a schema library (Pydantic, Zod) before using it. Even with structured output enabled, treat the response as untrusted input until validation passes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I reduce LLM costs in production?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cache the system prompt and stable context — most providers offer prompt caching that cuts repeated-prefix cost by 80-90 percent. Route simple requests to a cheaper model and only escalate hard ones. Trim retrieved context aggressively; LLMs answer better with less, not more. Short-circuit obvious cases with rules before they ever hit the model. Batch non-interactive workloads through the batch API for a roughly 50 percent discount."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I reduce LLM latency?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Stream tokens to the user instead of waiting for full responses — perceived latency drops even when total time is the same. Use prompt caching to skip prefix processing on repeated calls. Pick a faster model for time-critical paths; Claude Haiku and GPT-5 mini class models are 3 to 5 times faster than their frontier siblings. Run retrieval, tool calls, and the model call in parallel where dependencies allow. For very latency-sensitive flows, pre-compute and cache common responses."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need a vector database for an LLM application?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only if you have a real corpus the model must search and your evals show retrieval improves answers. Most early-stage applications need a relational database with full-text search far more than they need a vector store. Postgres with pgvector covers both. Add a dedicated vector database when corpus size or query volume makes that boundary obvious."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://jayzeedesign.github.io/superdesign-site/"},
+    {"@type": "ListItem", "position": 2, "name": "Build with LLMs", "item": "https://jayzeedesign.github.io/superdesign-site/build-with-llms/"}
+  ]
+}
+</script>
+
+<style>
+  .article-wrap{padding:56px 0 24px}
+  .breadcrumb{font-size:13px;color:var(--text-dim);margin:0 0 18px;letter-spacing:.02em}
+  .breadcrumb a{color:var(--text-dim)}
+  .breadcrumb a:hover{color:var(--text);text-decoration:none}
+  .article-header{max-width:760px;margin:0 auto}
+  .article-header h1{font-size:clamp(32px,4.4vw,48px);line-height:1.1;margin:0 0 18px}
+  .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-dim);font-size:14px;margin:0 0 8px}
+  .article-meta .dot{opacity:.5}
+  .prose{max-width:760px;margin:0 auto;padding:8px 0 56px;font-size:18px;line-height:1.7}
+  .prose h2{font-size:clamp(24px,3vw,30px);margin:48px 0 14px;letter-spacing:-.01em}
+  .prose h3{font-size:20px;margin:28px 0 8px}
+  .prose p{color:var(--text);margin:0 0 16px}
+  .prose ul,.prose ol{color:var(--text);padding-left:22px;margin:0 0 18px}
+  .prose li{margin:0 0 8px}
+  .prose code{background:#161a23;border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:14px;color:#d6dbe7}
+  .prose strong{color:#fff}
+  .tldr{
+    background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.06));
+    border:1px solid rgba(124,92,255,.35);
+    border-radius:var(--radius);
+    padding:22px 26px;margin:18px 0 28px;
+  }
+  .tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2)}
+  .tldr ul{margin:0;padding-left:20px}
+  .tldr li{color:var(--text);margin:6px 0}
+  .definition{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius);
+    padding:20px 22px;margin:24px 0;
+  }
+  .definition .label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px}
+  .definition .term{font-weight:700;color:#fff;margin:0 0 6px;font-size:18px}
+  .definition p{margin:0;color:var(--text-dim)}
+  .callout{
+    background:#11141b;border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 20px;margin:18px 0;color:var(--text-dim);font-size:16px;
+  }
+  .callout strong{color:#fff}
+  .stack-table{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:15px}
+  .stack-table th,.stack-table td{border:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top}
+  .stack-table th{background:#11141b;color:#fff;font-weight:600}
+  .stack-table td{color:var(--text-dim)}
+  .stack-table code{font-size:13px}
+  .faq{margin:32px 0 0}
+  .faq h2{margin-bottom:18px}
+  .faq details{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 20px;margin:0 0 10px;
+  }
+  .faq details[open]{border-color:rgba(124,92,255,.45)}
+  .faq summary{cursor:pointer;font-weight:600;color:#fff;list-style:none;font-size:17px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";float:right;color:var(--accent-2);font-size:22px;line-height:1}
+  .faq details[open] summary::after{content:"–"}
+  .faq details > p{margin:10px 0 0;color:var(--text-dim);font-size:16px;line-height:1.65}
+  .next-reads{margin:48px 0 8px}
+  .next-reads h2{margin-bottom:14px}
+  .next-reads ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .next-reads li{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .next-reads a{color:#fff;font-weight:600}
+  .next-reads p{margin:6px 0 0;color:var(--text-dim);font-size:14px}
+  .author-line{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:14px;margin:0 0 26px}
+  .author-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:inline-block}
+  @media (max-width:860px){
+    .article-wrap{padding:32px 0 16px}
+    .prose{font-size:17px}
+    .next-reads ul{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="../" aria-label="Superdesign home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Superdesign</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="../#how">How it works</a></li>
+        <li><a href="../#features">Features</a></li>
+        <li><a href="../ai-agents/">AI Agents</a></li>
+        <li><a href="./" aria-current="page">Build with LLMs</a></li>
+        <li><a href="../#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article-wrap">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a> &rsaquo; <span>Build with LLMs</span>
+      </nav>
+
+      <header class="article-header">
+        <p class="eyebrow">Pillar guide · LLM applications</p>
+        <h1>LLM Application Architecture: A Founder's Guide to Building with LLMs</h1>
+        <p class="article-meta">
+          <span>Updated 27 May 2026</span><span class="dot">·</span>
+          <span>~14 min read</span><span class="dot">·</span>
+          <span>For early-stage AI founders</span>
+        </p>
+        <p class="author-line"><span class="author-dot" aria-hidden="true"></span><span>By the Superdesign team</span></p>
+
+        <section class="tldr" aria-label="TL;DR">
+          <h2>TL;DR</h2>
+          <ul>
+            <li>An <strong>LLM application</strong> is a model plus the seven layers around it. The model is the smallest part. The layers are where products live or die.</li>
+            <li>Don't fine-tune first. <strong>Prompt → few-shot → retrieval → fine-tune</strong>, in that order. Most founders never get past step three.</li>
+            <li>Pick a model by running 30–100 of <em>your</em> tasks on each candidate. Vendor benchmarks are marketing.</li>
+            <li>Structured output, prompt caching, and aggressive context trimming buy you the biggest cost and quality wins. Everything else is a rounding error.</li>
+            <li>Latency is a UX problem before it's an infra problem — <strong>stream first, optimize second</strong>.</li>
+          </ul>
+        </section>
+      </header>
+
+      <div class="prose">
+
+        <section class="definition" aria-label="Definition">
+          <p class="label">Definition</p>
+          <p class="term">LLM application</p>
+          <p>A software system that uses one or more large language models as part of a product feature. The architecture is the set of components and data flows around the model: input handling, prompt assembly, retrieval, model call, output validation, observability, and cost or latency controls. The model is one component in the system, not the system itself.</p>
+        </section>
+
+        <p>The most expensive mistake we see early AI teams make is treating the LLM as the product instead of treating <em>the system around the LLM</em> as the product. A founder ships a thin wrapper around <code>chat.completions.create</code>, calls it an "AI app," and watches it fall apart the first time a user gives it a real input. The model wasn't the problem. The missing architecture was.</p>
+
+        <p>This guide is the architecture diagram we wish every YC-batch AI team had on their first whiteboard. It's what we've learned building Superdesign — an LLM-powered design agent — and watching dozens of pre-seed teams build their own LLM features. It is opinionated, written for founders who have shipped backends but haven't yet shipped an LLM feature that survived ten thousand users.</p>
+
+        <p>We'll go through the seven layers of an LLM application, how to choose a model without burning a month, when retrieval beats fine-tuning (and when it doesn't), how to get reliable structured output, and the specific tactics that bring cost and latency to acceptable numbers. Each section links to a deeper post in the <a href="./">build-with-LLMs cluster</a> when you want to go further.</p>
+
+        <h2 id="seven-layers">The seven layers of an LLM application</h2>
+
+        <p>Strip away the framework branding and a working LLM application has the same seven layers. If you can name them in your system, you can debug it. If you can't, something is hiding from you.</p>
+
+        <ol>
+          <li><strong>Input layer</strong> — where user requests, files, screenshots, and events come in. Includes auth, rate limits, and basic input validation.</li>
+          <li><strong>Context assembly</strong> — what goes into the prompt. System prompt, user message, retrieved chunks, prior turns, examples. This is your product.</li>
+          <li><strong>Retrieval</strong> — pulling relevant facts from your corpus when the answer depends on them. Search, ranking, deduplication, recency biasing.</li>
+          <li><strong>Model call</strong> — the actual LLM invocation, including model choice, temperature, max tokens, tool definitions, and structured-output configuration.</li>
+          <li><strong>Output validation</strong> — schema-checking the response, retrying on failure, and quarantining responses that look unsafe or wrong.</li>
+          <li><strong>Observability and evals</strong> — traces, logs, replays, a fixed eval set, and a cost or latency dashboard your team actually looks at.</li>
+          <li><strong>Cost and latency controls</strong> — prompt caching, model routing, batch processing, streaming, and short-circuit rules.</li>
+        </ol>
+
+        <p>None of these is exotic. All of them are missing from most demos. Build them in the order above; the layers later in the list quietly fail if the earlier ones are weak.</p>
+
+        <div class="callout">
+          <strong>Founder-grade heuristic.</strong> If you cannot draw the seven layers of your LLM feature on a napkin in under two minutes, you don't have an architecture — you have a script. Scripts ship demo videos. Architectures ship products.
+        </div>
+
+        <h2 id="choose-model">Choosing a model without burning a month</h2>
+
+        <p>"Which model should I use?" eats more founder time than it should. The honest answer in 2026 is: it depends on your task, and the only way to know is to run your own evals. But here's a sober map of the realistic defaults.</p>
+
+        <table class="stack-table" aria-label="LLM model comparison for production use">
+          <thead>
+            <tr><th>Model family</th><th>Strongest for</th><th>Cost</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Claude Sonnet 4.6 / Opus 4.7</strong></td>
+              <td>Tool use, long context, writing quality, code, multi-turn agents.</td>
+              <td>Mid-tier. Best price/quality if you use prompt caching.</td>
+            </tr>
+            <tr>
+              <td><strong>GPT-5 / GPT-5 mini</strong></td>
+              <td>Raw reasoning, broad ecosystem, native structured output, batch API.</td>
+              <td>Frontier-priced for GPT-5; mini is very cheap.</td>
+            </tr>
+            <tr>
+              <td><strong>Gemini 2.5 Pro / Flash</strong></td>
+              <td>Multimodal, Google Cloud native stacks, very long context (1M+ tokens).</td>
+              <td>Competitive; Flash is the cheapest serious option.</td>
+            </tr>
+            <tr>
+              <td><strong>Open-weights (Llama 4, Qwen 3, Mistral Large)</strong></td>
+              <td>Self-hosting for compliance, fine-tuning, very high-volume cheap inference.</td>
+              <td>Cheaper at scale; expensive in eng-hours.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>None of these is wrong. They solve different problems. <strong>The mistake is picking one before you've run your own tasks against two of them.</strong> Build a fixed set of 30–100 representative inputs, run them through your top-two candidates, score on the dimensions that matter for your product. Two days of work. We go deeper in <a href="#" data-link-placeholder="choosing-an-llm-for-production">Choosing an LLM for production: a decision matrix</a>.</p>
+
+        <p>The Claude-vs-GPT-for-agents question deserves its own pass, because the differences are real and product-shaped. Claude's tool-use accuracy and willingness to ask clarifying questions tend to make it the safer default for agents; GPT-5's reasoning chains and structured-output ergonomics make it strong for analysis tasks. See <a href="#" data-link-placeholder="claude-vs-gpt-for-agents">Claude vs GPT for agents</a> for the head-to-head.</p>
+
+        <h2 id="rag-vs-fine-tuning">RAG vs. fine-tuning: when to use which</h2>
+
+        <p>Founders pick RAG and fine-tuning in the wrong order. They reach for fine-tuning because it sounds sophisticated, struggle for two weeks, and end up with a model that's expensive to update and worse at general reasoning than the base. Then they bolt on retrieval to fix the gaps and ship a Frankenstein.</p>
+
+        <p>The boring, correct order is:</p>
+
+        <ol>
+          <li><strong>Prompt engineering.</strong> Most quality gaps close with a better system prompt. Free, fast, debuggable.</li>
+          <li><strong>Few-shot examples.</strong> Include 3–10 representative input/output pairs in the prompt. Closes another large chunk of the gap. Cost: tokens.</li>
+          <li><strong>Retrieval (RAG).</strong> When the answer depends on facts the model can't memorize — documentation, ticket history, product catalogs, recent events.</li>
+          <li><strong>Fine-tuning.</strong> When you need a consistent <em>style</em>, <em>format</em>, or <em>behavior</em> that prompting cannot produce reliably even with good examples. Or when token economics make a smaller fine-tuned model cheaper at scale.</li>
+        </ol>
+
+        <p>The two are not alternatives; they answer different questions. RAG handles "what should the model <em>know</em>?" Fine-tuning handles "how should the model <em>behave</em>?" The deeper decision tree — including hybrid setups where you fine-tune a small model for routing and use a frontier model for answering — lives in <a href="#" data-link-placeholder="rag-vs-fine-tuning-when-to-use">RAG vs. fine-tuning: when to use each</a>.</p>
+
+        <h3>If you do build RAG, the boring version is almost always right</h3>
+
+        <p>The default RAG stack we recommend for a pre-seed team is unfashionable on purpose:</p>
+
+        <ul>
+          <li><strong>Storage:</strong> Postgres with the <code>pgvector</code> extension. One database, one set of credentials, one backup story.</li>
+          <li><strong>Chunking:</strong> 500–1,000 token chunks with 10–15% overlap. Don't tune this before you have evals.</li>
+          <li><strong>Retrieval:</strong> Hybrid — full-text search (BM25) plus vector similarity, then re-rank the top 50 with a cross-encoder if quality demands it.</li>
+          <li><strong>Context budget:</strong> Inject the top 3–6 chunks. More retrieved context usually hurts; LLMs answer better with less, not more.</li>
+        </ul>
+
+        <p>You do not need Pinecone, Weaviate, or a separate vector store for the first 6 months. You can need them later. Most teams do not get to later.</p>
+
+        <h2 id="structured-output">Structured output: the difference between a demo and a feature</h2>
+
+        <p>Almost every LLM application eventually wants structured data — a JSON object, a function call, a typed result. The naive approach is to ask nicely and hope. That approach has a 70–95% success rate depending on the model and the schema, which is exactly bad enough to lose users without setting off alarms.</p>
+
+        <p>Three reliable patterns, in order of preference:</p>
+
+        <ol>
+          <li><strong>Native structured output.</strong> OpenAI's <code>response_format</code> with a JSON Schema. Anthropic's tool-use as a typed return channel. Gemini's response schemas. These give you 99%+ schema conformance because they constrain decoding at the token level.</li>
+          <li><strong>Constrained-decoding libraries.</strong> Outlines, Instructor, or LMFE wrap the model to enforce a Pydantic / Zod schema even when the provider doesn't. Useful for self-hosted models.</li>
+          <li><strong>Prompt-then-validate-then-retry.</strong> Ask for JSON, parse with a schema library, retry once with the validation error injected into the next prompt. Works as a fallback. Don't make it your primary strategy.</li>
+        </ol>
+
+        <p>Whatever you use, <strong>treat the parsed output as untrusted input</strong>. Validate every field. Reject nulls where you didn't allow them. Cap string lengths. The model will surprise you, and so will the user trying to break your model. Worked examples and pitfall cases live in <a href="#" data-link-placeholder="structured-output-llm">Structured output from LLMs: patterns and pitfalls</a>.</p>
+
+        <div class="callout">
+          <strong>Founder-grade heuristic.</strong> If your "AI feature" depends on parsing free-form text from the model with a regex, you have a structured-output problem disguised as a parsing problem. Fix the upstream constraint, not the downstream regex.
+        </div>
+
+        <h2 id="cost">Reducing LLM costs without sacrificing quality</h2>
+
+        <p>The default cost curve of an LLM feature is exponential in the wrong direction. The fix is not "use a cheaper model" — it's a small set of architectural moves that compound.</p>
+
+        <ol>
+          <li><strong>Prompt caching.</strong> Every major provider now offers it. Mark the stable prefix of your prompts — system prompt, tool definitions, retrieved boilerplate — as cacheable, and you cut repeated-prefix cost by 80–90%. This is the single biggest lever for most apps. Free to implement.</li>
+          <li><strong>Model routing.</strong> Send simple requests to a cheaper, faster model (Haiku, GPT-5 mini, Gemini Flash) and only escalate to a frontier model when a classifier says it's hard. Usually a 2–3× cost reduction on a typical request mix.</li>
+          <li><strong>Aggressive context trimming.</strong> LLMs answer better with less, not more. Trim retrieved chunks ruthlessly. Drop irrelevant turns from history. Use the long context window as a budget, not a target.</li>
+          <li><strong>Short-circuit rules.</strong> A regex, a SQL lookup, or a cached canonical answer can handle 20–40% of "AI" requests without ever hitting a model. Build the deterministic layer first; route everything else to the LLM.</li>
+          <li><strong>Batch API.</strong> Non-interactive workloads — overnight summarization, eval runs, content generation — go through the batch endpoint at roughly half price. Latency is hours, not seconds; for non-interactive paths nobody cares.</li>
+        </ol>
+
+        <p>Cursor, Devin, Claude Code, and every other agent product you've heard of are doing all five of these on every request. The deep dive — including the specific cache-key shape and how to design prompts so the stable prefix is genuinely stable — is in <a href="#" data-link-placeholder="reduce-llm-costs">How to reduce LLM costs in production</a>.</p>
+
+        <h2 id="latency">Latency is a UX problem first</h2>
+
+        <p>Founders chase latency by switching models. That's usually the third lever, not the first. The first lever is perception.</p>
+
+        <ul>
+          <li><strong>Stream tokens to the user.</strong> The model takes the same total time, but the user sees the first token in 300ms instead of 6s. For chat-shaped UX this is the entire game.</li>
+          <li><strong>Show intermediate state.</strong> "Searching docs… Reading top result… Drafting answer…" — explicit progress events make a 10s response feel acceptable. Silent waits feel broken at 3s.</li>
+          <li><strong>Parallelize independent work.</strong> Retrieval, classification, and the model call should run concurrently when they don't depend on each other. Most LLM apps serialize them by accident.</li>
+          <li><strong>Cache and pre-compute.</strong> The hot 5% of queries can often be answered from a pre-computed cache with a freshness check. Sub-100ms responses for the common path; full pipeline for the long tail.</li>
+        </ul>
+
+        <p>After those four, switch to a faster model on the latency-critical path. Haiku, GPT-5 mini, and Gemini Flash are 3–5× faster than their frontier siblings and good enough for routing, classification, and most extraction tasks. The full latency playbook — including speculative decoding, request hedging across providers, and KV-cache reuse for self-hosted models — is in <a href="#" data-link-placeholder="llm-latency-optimization">LLM latency optimization for production</a>.</p>
+
+        <h2 id="evals">Evals: how you stop shipping by vibes</h2>
+
+        <p>The single biggest difference between LLM applications that quietly degrade and ones that quietly improve is whether the team has a real eval set. Hamel Husain's audit-style eval posts started this conversation in 2024, and two years later most pre-seed teams still ship every prompt change by vibes.</p>
+
+        <p>You do not need a research-grade harness. You need <strong>a fixed set of 30–100 real tasks</strong> with expected behaviors, run on every change. Score on three axes:</p>
+
+        <ol>
+          <li><strong>Task success.</strong> Did the model solve it? Often easy to autograde — output matches expected, or contains a required substring, or passes a schema.</li>
+          <li><strong>Output quality.</strong> When success isn't binary (writing, summarization, design output), use an LLM judge with a rubric or human spot-checks on a sample.</li>
+          <li><strong>Cost and latency per task.</strong> Every prompt change that improves quality but doubles cost is a tradeoff, not an upgrade. Make the tradeoff visible.</li>
+        </ol>
+
+        <p>Eval data comes from the same places product feedback comes from: real user transcripts, bug reports, edge cases your designer hit while clicking around. The first ten cases will feel arbitrary; that's fine. By case 40 you'll have a usable signal. The toolchain — Promptfoo, Braintrust, Langfuse, or a Postgres table — matters far less than the discipline of running the set on every change. <a href="#" data-link-placeholder="llm-evals-how-to">LLM evals: a practical setup for early-stage teams</a> walks through the toolchain.</p>
+
+        <h2 id="observability">Observability: agents and LLMs both die in production without it</h2>
+
+        <p>An LLM application without traces is unfixable. You will get a Slack message that says "the AI answered something weird at 11pm, the user closed the tab." You need: which model, which prompt revision, the full input, the full output, the retrieved context, every tool call, cost and latency.</p>
+
+        <p>Minimum observability checklist for an LLM app:</p>
+        <ul>
+          <li>Per-request trace with the assembled prompt, model parameters, full response, and parsed output. Store the payloads, not just metadata.</li>
+          <li>Cost and latency per request, surfaced in a dashboard your team sees daily.</li>
+          <li>A replay tool — given a trace ID, you can re-run the exact request against a new prompt or model.</li>
+          <li>Schema-validation failure rate, retry rate, and a per-model breakdown. When this number starts trending up, your structured-output prompts have drifted.</li>
+          <li>Tied-back conversion or success metric for the user task the LLM was supporting. Token counts are not a product metric.</li>
+        </ul>
+
+        <p>LangSmith, Langfuse, Helicone, and Braintrust are reasonable defaults. So is a Postgres table with a JSON column and a small admin UI. The choice matters less than committing to actually open the traces every day for the first month.</p>
+
+        <h2 id="gates">From prototype to production: the five gates</h2>
+
+        <p>This is the checklist we use internally before an LLM feature goes from "cool demo" to "real users can touch it." If your feature doesn't pass all five, don't ship. Ship the parts that pass.</p>
+
+        <ol>
+          <li><strong>Narrow task.</strong> The feature does <em>one</em> thing well. "Summarize this PR into a release note" is narrow. "Be an engineering copilot" is not.</li>
+          <li><strong>Validated output.</strong> Every response goes through schema validation, length caps, and content filters before it reaches the user.</li>
+          <li><strong>Eval set passes.</strong> ≥90% task success on a 30+ case eval set, with no regressions on the last ten cases you added.</li>
+          <li><strong>Observability live.</strong> Traces, cost dashboard, error alerting wired up <em>before</em> the first real user touches it.</li>
+          <li><strong>Rollback plan.</strong> A feature flag to disable the LLM path and route to a deterministic fallback (a static answer, a form, a humans-only flow). Models get deprecated. Providers have outages. You will use this flag.</li>
+        </ol>
+
+        <h2 id="mistakes">Common mistakes we keep seeing</h2>
+
+        <p>From sitting next to enough early teams, the same five mistakes show up over and over:</p>
+
+        <ul>
+          <li><strong>Fine-tuning before prompting.</strong> Fine-tuning is the expensive third step, not the first. Prompt → few-shot → retrieval first; almost everyone stops there.</li>
+          <li><strong>Stuffing the context window.</strong> "It has 1M tokens, let me put everything in." Models perform better with less. Trim ruthlessly.</li>
+          <li><strong>Treating model output as trusted.</strong> No schema validation, no length cap, no content check. One day the model returns a 40K-character response and your UI catches fire.</li>
+          <li><strong>Shipping without evals.</strong> Every prompt change after that is a coin flip dressed up as progress.</li>
+          <li><strong>Picking a vector DB on day one.</strong> Postgres+pgvector covers you to thousands of users. Adopt a dedicated vector store when, not before, you can name what it gives you.</li>
+        </ul>
+
+        <h2 id="faq">FAQ</h2>
+
+        <section class="faq" aria-label="Frequently asked questions">
+
+          <details>
+            <summary>What is LLM application architecture?</summary>
+            <p>LLM application architecture is the set of components and data flows that turn a large language model into a reliable product feature. The minimum stack is input handling, prompt assembly, model call, output validation, and observability. Retrieval, caching, evals, and orchestration layer on as the product matures. The model is one component in a system, not the system itself.</p>
+          </details>
+
+          <details>
+            <summary>When should I use RAG versus fine-tuning?</summary>
+            <p>Use retrieval-augmented generation when the answer depends on facts that change or are too large for the prompt — docs, ticket history, product catalogs. Use fine-tuning when you need a consistent style, format, or behavior that prompting cannot reliably produce. Most early-stage teams need RAG, not fine-tuning. Try prompting and few-shot examples first; reach for fine-tuning only after evals show prompting plateaued.</p>
+          </details>
+
+          <details>
+            <summary>Which LLM should I choose for production?</summary>
+            <p>As of mid-2026 the realistic defaults are Claude Sonnet 4.6 or Opus 4.7 for tool use and long context; GPT-5 for raw reasoning and broad ecosystem support; Gemini 2.5 Pro for multimodal and Google-native stacks. Pick by running your own 30–100 task eval on each candidate. Vendor benchmarks are marketing; your eval set is the only signal that matters.</p>
+          </details>
+
+          <details>
+            <summary>How do I get structured output from an LLM?</summary>
+            <p>Use the native structured-output features of your model: OpenAI's <code>response_format</code> with a JSON Schema, Anthropic's tool-use as a typed return channel, or constrained-decoding libraries like Outlines and Instructor. Always validate the parsed output with a schema library (Pydantic, Zod) before using it. Treat every response as untrusted input until validation passes.</p>
+          </details>
+
+          <details>
+            <summary>How do I reduce LLM costs in production?</summary>
+            <p>Cache the stable prefix of your prompt — system prompt and tool definitions — using your provider's prompt-cache feature. Route simple requests to a cheaper model. Trim retrieved context aggressively. Short-circuit obvious cases with deterministic rules. Batch non-interactive workloads for roughly 50% off. Stacked, these typically cut effective cost 5–10× from a naive baseline.</p>
+          </details>
+
+          <details>
+            <summary>How do I reduce LLM latency?</summary>
+            <p>Stream tokens to the user instead of waiting for full responses. Cache stable prompt prefixes so repeated requests skip prefix processing. Run retrieval and the model call in parallel where dependencies allow. Pick a faster model class (Haiku, GPT-5 mini, Gemini Flash) for latency-critical paths. Pre-compute and cache common responses for the hot 5% of queries.</p>
+          </details>
+
+          <details>
+            <summary>Do I need a vector database for an LLM application?</summary>
+            <p>Only if you have a real corpus the model must search and your evals show retrieval improves answers. Most early-stage apps need a relational database with full-text search far more than they need a vector store. Postgres with <code>pgvector</code> covers both. Add a dedicated vector database when corpus size, query volume, or recall requirements make the boundary obvious.</p>
+          </details>
+
+          <details>
+            <summary>How long does it take to build a production LLM feature?</summary>
+            <p>A first version with a narrow task, validated structured output, a 30-case eval set, prompt caching, and observability is realistically 2–4 weeks for an experienced engineer. Most teams underestimate evals and observability and ship a prototype in a week that takes another month to harden. Plan for the second month.</p>
+          </details>
+
+        </section>
+
+        <section class="next-reads" aria-label="Continue reading">
+          <h2>Continue reading the build-with-LLMs cluster</h2>
+          <ul>
+            <li><a href="#" data-link-placeholder="rag-vs-fine-tuning-when-to-use">RAG vs. fine-tuning</a><p>A decision tree for when each one is right — and when a smarter prompt beats both.</p></li>
+            <li><a href="#" data-link-placeholder="choosing-an-llm-for-production">Choosing an LLM for production</a><p>A model decision matrix you can run on your own tasks in two days.</p></li>
+            <li><a href="#" data-link-placeholder="reduce-llm-costs">Reduce LLM costs</a><p>Prompt caching, model routing, context trimming, batch API — the five compounding levers.</p></li>
+            <li><a href="#" data-link-placeholder="structured-output-llm">Structured output from LLMs</a><p>Native JSON schemas, constrained decoding, and how to validate the result safely.</p></li>
+            <li><a href="#" data-link-placeholder="llm-latency-optimization">LLM latency optimization</a><p>Streaming, parallelization, prompt cache reuse, and when to actually switch models.</p></li>
+            <li><a href="#" data-link-placeholder="llm-evals-how-to">LLM evals: a practical setup</a><p>30 cases, three axes, 24 hours of work — how to stop shipping by vibes.</p></li>
+            <li><a href="#" data-link-placeholder="claude-vs-gpt-for-agents">Claude vs GPT for agents</a><p>The head-to-head on tool use, structured output, and writing quality.</p></li>
+          </ul>
+        </section>
+
+        <div class="callout" style="margin-top:40px">
+          <strong>Building an AI product?</strong> Superdesign is an AI design agent for early-stage founders building AI products. If the UI is the bottleneck on your launch, <a href="../#contact">talk to us</a>.
+        </div>
+
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <p>&copy; <span>2026</span> Superdesign. An AI design agent for founders building AI products.</p>
+    <ul class="footer-nav">
+      <li><a href="../">Home</a></li>
+      <li><a href="../ai-agents/">AI Agents</a></li>
+      <li><a href="./">Build with LLMs</a></li>
+      <li><a href="../#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
