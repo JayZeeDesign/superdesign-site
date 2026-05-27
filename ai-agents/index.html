@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to Build an AI Agent: A Production-Grade Guide for Founders (2026)</title>
+<meta name="description" content="A practical, founder-focused guide to building AI agents that actually ship. Architecture, memory, evals, orchestration, observability — written for early-stage AI product teams.">
+<link rel="canonical" href="https://jayzeedesign.github.io/superdesign-site/ai-agents/">
+<meta name="theme-color" content="#0b0d12">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Build an AI Agent: A Production-Grade Guide for Founders (2026)">
+<meta property="og:description" content="The agent stack — architecture, memory, evals, orchestration, observability — explained for early-stage AI founders. No framework hype.">
+<meta property="og:url" content="https://jayzeedesign.github.io/superdesign-site/ai-agents/">
+<meta property="og:site_name" content="Superdesign">
+<meta property="og:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="How to build an AI agent — Superdesign pillar guide">
+<meta property="article:published_time" content="2026-05-27">
+<meta property="article:modified_time" content="2026-05-27">
+<meta property="article:section" content="AI Agents">
+<meta property="article:tag" content="AI agents">
+<meta property="article:tag" content="LLM applications">
+<meta property="article:tag" content="AI engineering">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Build an AI Agent (2026): The Founder's Guide">
+<meta name="twitter:description" content="Architecture, memory, evals, orchestration, observability — the agent stack for early-stage AI teams.">
+<meta name="twitter:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preload" as="style" href="../styles.css">
+<link rel="stylesheet" href="../styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Build an AI Agent: A Production-Grade Guide for Founders (2026)",
+  "description": "A practical, founder-focused guide to building AI agents that actually ship. Architecture, memory, evals, orchestration, observability — written for early-stage AI product teams.",
+  "datePublished": "2026-05-27",
+  "dateModified": "2026-05-27",
+  "inLanguage": "en",
+  "url": "https://jayzeedesign.github.io/superdesign-site/ai-agents/",
+  "mainEntityOfPage": "https://jayzeedesign.github.io/superdesign-site/ai-agents/",
+  "image": "https://jayzeedesign.github.io/superdesign-site/og.svg",
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Early-stage founders building AI products"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "about": [
+    {"@type": "Thing", "name": "AI agents"},
+    {"@type": "Thing", "name": "Large language model applications"},
+    {"@type": "Thing", "name": "Agent orchestration"}
+  ],
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".tldr", ".definition", ".faq"]
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An AI agent is a system that uses a large language model to make decisions, call tools, and pursue a goal across multiple steps — instead of generating a single response. The defining property is autonomy across iterations: the LLM picks the next action, runs it, observes the result, and decides what to do next."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is an AI agent different from an LLM workflow?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An LLM workflow follows a fixed graph of steps you wrote in code. An AI agent decides the graph at runtime by choosing which tool to call next. Workflows are predictable and cheap; agents are flexible but harder to evaluate and debug. Most production systems are workflows with agentic sub-tasks, not full open-loop agents."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which framework should I use to build an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For most early-stage teams, start without a framework. Write the loop yourself in ~150 lines so you understand it. Adopt a framework (LangGraph, CrewAI, Autogen, Mastra, OpenAI Agents SDK) only when you hit a specific problem it solves — multi-agent routing, persistent state, or graph visualization. Frameworks become liabilities when you can't explain what they're doing on your behalf."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I test and evaluate an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Build a fixed eval set of 30 to 100 real tasks with expected behaviors. Run it on every change. Score on three axes: task success (did it finish), trajectory quality (was the path sensible), and tool correctness (did it call the right tools with the right arguments). Manual review is cheaper than building a perfect autograder before you have product-market fit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does it cost to run an AI agent in production?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Per-task cost depends on the model and how many turns the agent takes. For a Claude Sonnet or GPT-4-class agent in 2026, expect 0.05 to 0.50 USD per non-trivial task, dominated by input tokens from tool results and prior context. Caching the system prompt and tool definitions, trimming context aggressively, and short-circuiting obvious cases are the highest-leverage cost wins."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need a vector database to build an agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Most agents need short-term context, structured tool outputs, and a key-value store far more than they need semantic retrieval. Add a vector DB when you have a real corpus the agent must search and a clear failure mode that retrieval fixes — not by default."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I use a single agent or a multi-agent system?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Default to one agent. Multi-agent systems multiply your debugging surface, latency, and token spend. Move to multiple agents when distinct tasks have distinct context windows, different tool sets, or different reliability bars — for example, a planner and a coder, or a researcher and a writer."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://jayzeedesign.github.io/superdesign-site/"},
+    {"@type": "ListItem", "position": 2, "name": "AI Agents", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"}
+  ]
+}
+</script>
+
+<style>
+  .article-wrap{padding:56px 0 24px}
+  .breadcrumb{font-size:13px;color:var(--text-dim);margin:0 0 18px;letter-spacing:.02em}
+  .breadcrumb a{color:var(--text-dim)}
+  .breadcrumb a:hover{color:var(--text);text-decoration:none}
+  .article-header{max-width:760px;margin:0 auto}
+  .article-header h1{font-size:clamp(32px,4.4vw,48px);line-height:1.1;margin:0 0 18px}
+  .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-dim);font-size:14px;margin:0 0 8px}
+  .article-meta .dot{opacity:.5}
+  .prose{max-width:760px;margin:0 auto;padding:8px 0 56px;font-size:18px;line-height:1.7}
+  .prose h2{font-size:clamp(24px,3vw,30px);margin:48px 0 14px;letter-spacing:-.01em}
+  .prose h3{font-size:20px;margin:28px 0 8px}
+  .prose p{color:var(--text);margin:0 0 16px}
+  .prose ul,.prose ol{color:var(--text);padding-left:22px;margin:0 0 18px}
+  .prose li{margin:0 0 8px}
+  .prose code{background:#161a23;border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:14px;color:#d6dbe7}
+  .prose strong{color:#fff}
+  .tldr{
+    background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.06));
+    border:1px solid rgba(124,92,255,.35);
+    border-radius:var(--radius);
+    padding:22px 26px;margin:18px 0 28px;
+  }
+  .tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2)}
+  .tldr ul{margin:0;padding-left:20px}
+  .tldr li{color:var(--text);margin:6px 0}
+  .definition{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius);
+    padding:20px 22px;margin:24px 0;
+  }
+  .definition .label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px}
+  .definition .term{font-weight:700;color:#fff;margin:0 0 6px;font-size:18px}
+  .definition p{margin:0;color:var(--text-dim)}
+  .callout{
+    background:#11141b;border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 20px;margin:18px 0;color:var(--text-dim);font-size:16px;
+  }
+  .callout strong{color:#fff}
+  .stack-table{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:15px}
+  .stack-table th,.stack-table td{border:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top}
+  .stack-table th{background:#11141b;color:#fff;font-weight:600}
+  .stack-table td{color:var(--text-dim)}
+  .stack-table code{font-size:13px}
+  .faq{margin:32px 0 0}
+  .faq h2{margin-bottom:18px}
+  .faq details{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 20px;margin:0 0 10px;
+  }
+  .faq details[open]{border-color:rgba(124,92,255,.45)}
+  .faq summary{cursor:pointer;font-weight:600;color:#fff;list-style:none;font-size:17px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";float:right;color:var(--accent-2);font-size:22px;line-height:1}
+  .faq details[open] summary::after{content:"–"}
+  .faq details > p{margin:10px 0 0;color:var(--text-dim);font-size:16px;line-height:1.65}
+  .next-reads{margin:48px 0 8px}
+  .next-reads h2{margin-bottom:14px}
+  .next-reads ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .next-reads li{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .next-reads a{color:#fff;font-weight:600}
+  .next-reads p{margin:6px 0 0;color:var(--text-dim);font-size:14px}
+  .author-line{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:14px;margin:0 0 26px}
+  .author-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:inline-block}
+  @media (max-width:860px){
+    .article-wrap{padding:32px 0 16px}
+    .prose{font-size:17px}
+    .next-reads ul{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="../" aria-label="Superdesign home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Superdesign</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="../#how">How it works</a></li>
+        <li><a href="../#features">Features</a></li>
+        <li><a href="./" aria-current="page">AI Agents</a></li>
+        <li><a href="../#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article-wrap">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a> &rsaquo; <span>AI Agents</span>
+      </nav>
+
+      <header class="article-header">
+        <p class="eyebrow">Pillar guide · AI agents</p>
+        <h1>How to Build an AI Agent: A Production-Grade Guide for Founders</h1>
+        <p class="article-meta">
+          <span>Updated 27 May 2026</span><span class="dot">·</span>
+          <span>~13 min read</span><span class="dot">·</span>
+          <span>For early-stage AI founders</span>
+        </p>
+        <p class="author-line"><span class="author-dot" aria-hidden="true"></span><span>By the Superdesign team</span></p>
+
+        <section class="tldr" aria-label="TL;DR">
+          <h2>TL;DR</h2>
+          <ul>
+            <li>An <strong>AI agent</strong> is an LLM in a loop, given tools and a goal. The interesting part is the loop, not the model.</li>
+            <li>Most "agents" in production are actually <strong>workflows with agentic steps</strong>. That's a feature, not a failure — start there.</li>
+            <li>The hard problems are <strong>memory, evals, and observability</strong>, not picking a framework. Frameworks change every six months. The hard problems don't.</li>
+            <li>Write the loop yourself first (~150 lines). Adopt a framework only when you can name the specific problem it solves for you.</li>
+            <li>Ship behind a <strong>narrow first task</strong>. An agent that does one thing reliably beats one that does ten things sometimes.</li>
+          </ul>
+        </section>
+      </header>
+
+      <div class="prose">
+
+        <section class="definition" aria-label="Definition">
+          <p class="label">Definition</p>
+          <p class="term">AI agent</p>
+          <p>A software system that uses a large language model to make decisions, call tools, and pursue a goal across multiple steps. The LLM picks the next action, runs it, observes the result, and chooses again. Autonomy across iterations is the defining property — not the model, not the prompt.</p>
+        </section>
+
+        <p>Every other week another team announces they've shipped an "autonomous AI agent." Most of those announcements are workflows in a trench coat. That's fine — workflows ship, agents demo — but the conflation is costing founders weeks of wasted work. They reach for LangGraph or CrewAI on day one, fight the abstraction, and end up with a tutorial-shaped product they can't debug.</p>
+
+        <p>This guide is the opposite of that. It's what we've learned building agents inside Superdesign (an agent for UI design) and watching dozens of YC-batch AI teams build their own. It's opinionated, written for founders who can ship a backend but haven't yet shipped an agent that survives ten thousand real users.</p>
+
+        <p>We'll cover what an agent actually is, the six components every production agent needs, how to pick a stack without buying into a framework cult, and the four things that quietly destroy agents in the wild: memory, evals, observability, and error handling. Each section links to a deeper post in the <a href="./">AI agents cluster</a> when you want to go further.</p>
+
+        <h2 id="agents-vs-workflows">Agents vs. workflows: get this right first</h2>
+
+        <p>The single biggest source of wasted effort in early agent projects is building an agent when a workflow would do. Both use LLMs. Both can call tools. The difference is who decides what happens next.</p>
+
+        <ul>
+          <li><strong>A workflow</strong> is a graph you wrote in code. The LLM fills in cells of the graph. The graph itself is fixed. Customer-support triage, structured data extraction, document classification — these are workflows. They are cheap, predictable, and easy to evaluate.</li>
+          <li><strong>An agent</strong> is a loop where the LLM picks the next node at runtime. You hand it a goal and a set of tools, and it decides which tool to call, what arguments to pass, when to stop. Coding assistants like Claude Code and Cursor's agent mode are agents. Devin is an agent (or claims to be). Most things that need to handle <em>open-ended</em> inputs are agents.</li>
+        </ul>
+
+        <p>The practical rule: <strong>if you can draw the happy-path flowchart in fewer than ten boxes, build a workflow.</strong> Workflows are easier to test, cheaper to run, and faster to ship. Add agentic decisions only where the input space genuinely requires runtime branching. We go deeper in <a href="#" data-link-placeholder="ai-agent-vs-llm-workflow">AI agent vs. LLM workflow: how to choose</a>.</p>
+
+        <p>Founders systematically over-pick agents because agents demo better. A workflow that works 99% of the time looks boring on Twitter. An agent that occasionally writes a poem instead of a SQL query looks magical. Resist this. Magical is not a deployment posture.</p>
+
+        <h2 id="six-components">The six components every production agent needs</h2>
+
+        <p>Strip away the framework branding and almost every working agent has the same six parts. If you can name them in your system, you can debug it. If you can't, the framework is hiding something from you.</p>
+
+        <ol>
+          <li><strong>Model</strong> — the LLM that does the thinking. Pick one with strong tool-use accuracy and a long context window. As of mid-2026, Claude Sonnet 4.6, GPT-5, and Gemini 2.5 Pro are the realistic defaults for tool-using agents.</li>
+          <li><strong>System prompt</strong> — the agent's role, constraints, and house rules. This is your product. It deserves the same code-review rigor as your backend.</li>
+          <li><strong>Tools</strong> — the actions the agent can take. Each is a typed function: name, description, JSON-schema arguments, and a deterministic implementation.</li>
+          <li><strong>Loop</strong> — the orchestration that runs <code>model → tool calls → tool results → model</code> until a stop condition fires.</li>
+          <li><strong>Memory</strong> — how state persists within a task (scratchpad) and across tasks (long-term memory).</li>
+          <li><strong>Observability</strong> — traces, logs, and replays. If you can't see what the agent did, you cannot fix it.</li>
+        </ol>
+
+        <h3>Tool design is product design</h3>
+        <p>The single highest-leverage change you can make to an early agent is rewriting your tool descriptions. The LLM is reading them with the same attention you'd give a teammate's PR description. Vague names like <code>do_thing</code> and arguments like <code>options: object</code> are unforced errors. A tool description should read like a docstring for a junior engineer: what it does, when to use it, what it returns, what it costs.</p>
+
+        <p>Anthropic's tool-use docs and OpenAI's function-calling guide both bury this lesson. We surface it here because it's the cheapest 15% accuracy improvement you'll ever ship.</p>
+
+        <h3>The loop is ~150 lines</h3>
+        <p>If you've never written the agent loop yourself, do it once before reaching for a framework. The whole thing is:</p>
+
+        <ol>
+          <li>Build the messages array: system prompt + conversation so far.</li>
+          <li>Call the model with the tool definitions.</li>
+          <li>If the response has tool calls, run each tool, append the results.</li>
+          <li>If the response has a final answer (or a stop signal), exit.</li>
+          <li>Otherwise, loop. Add a max-iterations guard — typically 25.</li>
+        </ol>
+
+        <p>That's the entire core. Frameworks add streaming, retries, graph visualization, persistence, multi-agent routing, and human-in-the-loop checkpoints — every one of which is useful at some scale and dead weight before it. <a href="#" data-link-placeholder="production-ai-agent-architecture">Production AI agent architecture: a reference diagram</a> walks through the loop with annotated code.</p>
+
+        <h2 id="stack">Picking your stack without buying into a cult</h2>
+
+        <p>The framework question consumes more founder time than it should. Here's a sober map of the 2026 options.</p>
+
+        <table class="stack-table" aria-label="Agent framework comparison">
+          <thead>
+            <tr><th>Option</th><th>Best when</th><th>Cost</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Hand-rolled</strong> (raw SDK + your loop)</td>
+              <td>You have one agent, &lt;5 tools, want full control. Most pre-seed teams.</td>
+              <td>You own all the wiring.</td>
+            </tr>
+            <tr>
+              <td><strong>OpenAI Agents SDK / Anthropic SDK loop helpers</strong></td>
+              <td>You want the loop boilerplate gone but not a graph DSL.</td>
+              <td>Locks you to one provider's conventions.</td>
+            </tr>
+            <tr>
+              <td><strong>LangGraph</strong></td>
+              <td>You have a real DAG, persistent state, and want visualization.</td>
+              <td>Concept-heavy. Reading the graph is its own skill.</td>
+            </tr>
+            <tr>
+              <td><strong>CrewAI / Autogen</strong></td>
+              <td>You're prototyping multi-agent collaboration patterns.</td>
+              <td>Magic is high. Debugging is hard. Production stories are still thin.</td>
+            </tr>
+            <tr>
+              <td><strong>Mastra / Vercel AI SDK agents</strong></td>
+              <td>JS/TS stack, lightweight ergonomics, you live on Vercel.</td>
+              <td>Younger ecosystem, faster API churn.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>None of these is wrong. They solve different problems. <strong>The mistake is picking one before you can articulate which problem you're solving.</strong> Pick the smallest tool that does what you need today; the cost of switching frameworks once you understand your loop is a day of work, not a quarter.</p>
+
+        <p>For a deeper comparison with code examples, see <a href="#" data-link-placeholder="ai-agent-orchestration-framework">AI agent orchestration framework comparison</a>.</p>
+
+        <h2 id="memory">Memory: where most agents quietly fail</h2>
+
+        <p>Founders treat memory as a feature you add later. Then they get to user #50, realize the agent has the personality of a goldfish, and end up bolting a vector database onto a system that doesn't need one.</p>
+
+        <p>There are three distinct kinds of memory in a real agent, and they want different storage.</p>
+
+        <ul>
+          <li><strong>Working memory</strong> (within a task) — the conversation so far, intermediate tool outputs, the scratchpad. Lives in the context window. Trim aggressively; the model pays attention more carefully to short contexts.</li>
+          <li><strong>Episodic memory</strong> (across tasks for one user) — what the user told you yesterday, what they prefer, what you've already tried. Usually a relational table, sometimes summarized into a short profile that gets injected into the system prompt.</li>
+          <li><strong>Semantic memory</strong> (a corpus the agent can search) — documentation, past tickets, product knowledge. <em>This</em> is what vector databases are for. If you don't have a corpus, you don't need one.</li>
+        </ul>
+
+        <p>The pattern we see kill teams: they pick a vector DB on day one because tutorials mention RAG, then they jam working memory into it. Now the agent retrieves three months of unrelated chat fragments by similarity score and confuses itself. Use boring storage for boring problems. <a href="#" data-link-placeholder="ai-agent-memory-patterns">AI agent memory patterns: working, episodic, semantic</a> goes through the patterns with code.</p>
+
+        <div class="callout">
+          <strong>Founder-grade heuristic.</strong> Before adding any memory system, write down the exact prompt the agent would need to behave correctly. If that prompt is &lt; 4,000 tokens, you don't have a memory problem — you have a prompt-engineering problem.
+        </div>
+
+        <h2 id="evals">Evals: agents are only useful if you can measure them</h2>
+
+        <p>Hamel Husain's audit-style eval posts started this conversation in 2024, and two years later most early-stage teams still don't have a real eval set. They ship by vibes, regress silently, and rediscover bugs every Friday.</p>
+
+        <p>You don't need a research-grade harness. You need <strong>a fixed set of 30–100 real tasks</strong> with expected behaviors, run on every change. Score on three axes:</p>
+
+        <ol>
+          <li><strong>Task success</strong> — did the agent complete the goal? Binary. Often easy to autograde.</li>
+          <li><strong>Trajectory quality</strong> — was the path sensible? Did it call tools in a reasonable order, with reasonable arguments? Usually graded by an LLM judge or human spot-check.</li>
+          <li><strong>Tool correctness</strong> — for each tool call, were the arguments right? This is where regressions hide. A function that suddenly passes <code>null</code> for a required field will look "successful" until production breaks.</li>
+        </ol>
+
+        <p>Eval data comes from the same places product feedback comes from: real user transcripts, bug reports, and edge cases your designer found while clicking around. The first ten cases will feel arbitrary; that's normal. By case 40 you'll have a usable signal. <a href="#" data-link-placeholder="ai-agent-evals">AI agent evals: a practical setup for early-stage teams</a> walks through the toolchain.</p>
+
+        <h2 id="observability">Observability and error handling in production</h2>
+
+        <p>An agent without traces is unfixable. You will get a Slack message that says "the agent did something weird at 11pm, the user closed the tab." You will need to know: which model, which prompt revision, which tools were called, what each returned, where it went off-rails.</p>
+
+        <p>Minimum observability checklist:</p>
+        <ul>
+          <li>Per-task trace with every model call, tool call, and tool result. <strong>Store the full payloads</strong>, not just metadata. Token cost is trivial compared to debugging time.</li>
+          <li>Replay capability — given a trace ID, you can re-run the exact same conversation against a new prompt or model.</li>
+          <li>Cost and latency per task, surfaced in a dashboard your whole team sees.</li>
+          <li>Per-tool error rate. When <code>web_search</code> starts failing 40% of the time, your agent's success rate quietly halves and the model "compensates" by hallucinating.</li>
+        </ul>
+
+        <p>LangSmith, Langfuse, Helicone, and Braintrust are reasonable defaults. So is a Postgres table with a JSON column and a small admin UI. The choice matters less than committing to actually look at the traces every day for the first month.</p>
+
+        <p>Error handling deserves its own pass. Network failures, model overload, malformed tool outputs, infinite loops — every one needs an explicit policy. <a href="#" data-link-placeholder="ai-agent-error-handling-retry-patterns">AI agent error handling and retry patterns</a> covers the standard recipes (exponential backoff with jitter, circuit breakers per tool, max-iteration guards, "ask user" fallbacks).</p>
+
+        <h2 id="gates">From prototype to production: the five gates</h2>
+
+        <p>This is the checklist we use internally before an agent goes from "cool demo" to "real users can touch it." If your agent doesn't pass all five, don't ship. Ship the parts that pass.</p>
+
+        <ol>
+          <li><strong>Narrow task.</strong> The agent does <em>one</em> thing well. "Draft the first version of a UI from a screenshot" is narrow. "Be a design assistant" is not.</li>
+          <li><strong>Bounded blast radius.</strong> If the agent does the worst plausible thing, what happens? Read-only tools are safe. Tools that send email or charge money need human-in-the-loop confirmation until you have weeks of clean evals.</li>
+          <li><strong>Eval set passes.</strong> ≥90% task success on your eval set, with zero regressions on the last 10 cases you added. This is your shipping gate, not your aspiration.</li>
+          <li><strong>Observability live.</strong> Traces, cost dashboard, error alerting wired up <em>before</em> the first real user touches it.</li>
+          <li><strong>Rollback plan.</strong> A flag to disable the agent and route to a fallback. Models get deprecated. Providers have outages. You will use this flag.</li>
+        </ol>
+
+        <h2 id="multi-agent">A note on multi-agent systems</h2>
+
+        <p>Multi-agent setups — a planner that delegates to specialist agents — are having a moment. They look elegant on a whiteboard. In practice, they multiply latency, token spend, and debugging difficulty. <strong>Default to one agent with good tools.</strong> Move to multiple agents when you have a real reason: distinct context windows, distinct tool sets, distinct reliability bars, or a coordination pattern (planner + worker, researcher + writer) that's genuinely cleaner as separate agents than as one agent with more tools.</p>
+
+        <p>If you do go multi-agent, treat each agent as an isolated service with its own evals. The bug you'll spend the most time on is one agent passing slightly-wrong arguments to another, and the system as a whole degrading. <a href="#" data-link-placeholder="multi-agent-system-architecture">Multi-agent system architecture patterns</a> covers the common topologies.</p>
+
+        <h2 id="mistakes">Common mistakes we keep seeing</h2>
+
+        <p>From sitting next to enough early teams, the same five mistakes show up over and over:</p>
+
+        <ul>
+          <li><strong>Picking a framework before writing the loop.</strong> You don't know what you're trading away.</li>
+          <li><strong>Adding a vector DB to a problem that didn't need one.</strong> Memory ≠ retrieval.</li>
+          <li><strong>Shipping without evals.</strong> Every change after that is a coin flip.</li>
+          <li><strong>Hiding tool errors from the model.</strong> If a tool fails, tell the model. It can often recover. Silently retrying is the worst option.</li>
+          <li><strong>Building "general" agents.</strong> Cursor didn't ship a general coding agent — it shipped tab-completion that grew. Narrow first, broaden later.</li>
+        </ul>
+
+        <h2 id="faq">FAQ</h2>
+
+        <section class="faq" aria-label="Frequently asked questions">
+
+          <details>
+            <summary>What is an AI agent?</summary>
+            <p>An AI agent is a software system that uses a large language model to make decisions, call tools, and pursue a goal across multiple steps. The defining property is autonomy across iterations: the LLM picks the next action, runs it, observes the result, and decides what to do next.</p>
+          </details>
+
+          <details>
+            <summary>How is an AI agent different from an LLM workflow?</summary>
+            <p>A workflow is a graph you wrote in code; the LLM fills in cells. An agent picks the graph at runtime by choosing which tool to call next. Workflows are predictable and cheap. Agents are flexible but harder to evaluate and debug. Most production systems are workflows with agentic sub-tasks, not full open-loop agents.</p>
+          </details>
+
+          <details>
+            <summary>Which framework should I use to build an AI agent?</summary>
+            <p>For most early-stage teams: start without one. Write the loop yourself in ~150 lines so you understand it. Adopt LangGraph, CrewAI, Autogen, Mastra, or the OpenAI Agents SDK only when you can name the specific problem you need it to solve. Frameworks become liabilities when you can't explain what they're doing on your behalf.</p>
+          </details>
+
+          <details>
+            <summary>How do I test and evaluate an AI agent?</summary>
+            <p>Build a fixed eval set of 30–100 real tasks with expected behaviors. Run it on every change. Score on task success (did it finish), trajectory quality (was the path sensible), and tool correctness (right arguments to the right tools). Manual review beats building a perfect autograder before you have product-market fit.</p>
+          </details>
+
+          <details>
+            <summary>How much does it cost to run an AI agent in production?</summary>
+            <p>Per-task cost depends on the model and number of turns. For a Claude Sonnet or GPT-4-class agent in 2026, expect $0.05–$0.50 per non-trivial task, dominated by input tokens from tool results and prior context. Caching the system prompt and tool definitions, trimming context aggressively, and short-circuiting obvious cases are the highest-leverage wins.</p>
+          </details>
+
+          <details>
+            <summary>Do I need a vector database to build an agent?</summary>
+            <p>No. Most agents need short-term context, structured tool outputs, and a key-value store far more than they need semantic retrieval. Add a vector DB when you have a real corpus the agent must search and a clear failure mode that retrieval fixes — not by default.</p>
+          </details>
+
+          <details>
+            <summary>Should I use a single agent or a multi-agent system?</summary>
+            <p>Default to one agent. Multi-agent systems multiply your debugging surface, latency, and token spend. Move to multiple agents when distinct tasks have distinct context windows, different tool sets, or different reliability bars — for example, a planner and a coder, or a researcher and a writer.</p>
+          </details>
+
+          <details>
+            <summary>How long does it take to build a production-grade AI agent?</summary>
+            <p>A first version with a narrow task, three tools, evals, and observability is realistically 2–4 weeks for an experienced engineer. Most teams underestimate the eval and observability work and ship a prototype in a week that takes another month to harden. Plan for the second month.</p>
+          </details>
+
+        </section>
+
+        <section class="next-reads" aria-label="Continue reading">
+          <h2>Continue reading the AI agents cluster</h2>
+          <ul>
+            <li><a href="#" data-link-placeholder="ai-agent-vs-llm-workflow">AI agent vs. LLM workflow</a><p>How to decide when you actually need an agent — and when a fixed graph is the right call.</p></li>
+            <li><a href="#" data-link-placeholder="ai-agent-evals">AI agent evals</a><p>A practical eval setup for early-stage teams: 30 cases, three axes, 24 hours of work.</p></li>
+            <li><a href="#" data-link-placeholder="ai-agent-memory-patterns">AI agent memory patterns</a><p>Working, episodic, and semantic memory — what each one is and which storage fits.</p></li>
+            <li><a href="#" data-link-placeholder="ai-agent-orchestration-framework">Orchestration framework comparison</a><p>LangGraph, CrewAI, Autogen, Mastra, and the case for none of them.</p></li>
+            <li><a href="#" data-link-placeholder="production-ai-agent-architecture">Production agent architecture</a><p>A reference diagram with annotated code for the six-component loop.</p></li>
+            <li><a href="#" data-link-placeholder="ai-agent-error-handling-retry-patterns">Error handling &amp; retry patterns</a><p>Network failures, tool errors, infinite loops — explicit policies for each.</p></li>
+          </ul>
+        </section>
+
+        <div class="callout" style="margin-top:40px">
+          <strong>Building an AI product?</strong> Superdesign is an AI design agent for early-stage founders building AI products. If the UI is the bottleneck on your launch, <a href="../#contact">talk to us</a>.
+        </div>
+
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <p>&copy; <span>2026</span> Superdesign. An AI design agent for founders building AI products.</p>
+    <ul class="footer-nav">
+      <li><a href="../">Home</a></li>
+      <li><a href="./">AI Agents</a></li>
+      <li><a href="../#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
