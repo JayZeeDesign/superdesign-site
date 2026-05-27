@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://superdesign-ai.github.io/site/sitemap.xml
+Sitemap: https://jayzeedesign.github.io/superdesign-site/sitemap.xml
