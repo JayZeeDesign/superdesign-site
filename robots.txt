@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://superdesign-ai.github.io/site/sitemap.xml
