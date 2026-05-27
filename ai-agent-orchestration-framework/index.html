@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Agent Orchestration Framework Comparison: LangGraph, CrewAI, Autogen, Mastra (2026)</title>
+<meta name="description" content="A founder-grade comparison of the four AI agent orchestration frameworks worth shortlisting in 2026 — and the case for no framework at all on most early-stage projects.">
+<link rel="canonical" href="https://jayzeedesign.github.io/superdesign-site/ai-agent-orchestration-framework/">
+<meta name="theme-color" content="#0b0d12">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<!-- Search engine verification (SUP-10). -->
+<!-- <meta name="google-site-verification" content="REPLACE_WITH_GSC_TOKEN"> -->
+<!-- <meta name="msvalidate.01" content="REPLACE_WITH_BING_WMT_TOKEN"> -->
+<meta name="indexnow" content="5bdc3cf653e9a956f932ad416367e882">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI Agent Orchestration Framework Comparison">
+<meta property="og:description" content="LangGraph, CrewAI, Autogen, Mastra — what each one is good at, where each breaks, and when no framework is the right choice.">
+<meta property="og:url" content="https://jayzeedesign.github.io/superdesign-site/ai-agent-orchestration-framework/">
+<meta property="og:site_name" content="Superdesign">
+<meta property="og:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="AI agent orchestration frameworks compared — Superdesign cluster guide">
+<meta property="article:published_time" content="2026-05-27">
+<meta property="article:modified_time" content="2026-05-27">
+<meta property="article:section" content="AI Agents">
+<meta property="article:tag" content="AI agents">
+<meta property="article:tag" content="LangGraph">
+<meta property="article:tag" content="CrewAI">
+<meta property="article:tag" content="Autogen">
+<meta property="article:tag" content="Mastra">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI Agent Orchestration Framework Comparison">
+<meta name="twitter:description" content="LangGraph vs CrewAI vs Autogen vs Mastra — and the case for no framework on most early-stage projects.">
+<meta name="twitter:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preload" as="style" href="../styles.css">
+<link rel="stylesheet" href="../styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "AI Agent Orchestration Framework Comparison: LangGraph, CrewAI, Autogen, Mastra (2026)",
+  "description": "A founder-grade comparison of the AI agent orchestration frameworks worth shortlisting in 2026, with honest tradeoffs and a no-framework alternative.",
+  "datePublished": "2026-05-27",
+  "dateModified": "2026-05-27",
+  "inLanguage": "en",
+  "url": "https://jayzeedesign.github.io/superdesign-site/ai-agent-orchestration-framework/",
+  "mainEntityOfPage": "https://jayzeedesign.github.io/superdesign-site/ai-agent-orchestration-framework/",
+  "image": "https://jayzeedesign.github.io/superdesign-site/og.svg",
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Early-stage founders building AI products"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "about": [
+    {"@type": "Thing", "name": "AI agent orchestration"},
+    {"@type": "Thing", "name": "LangGraph"},
+    {"@type": "Thing", "name": "CrewAI"},
+    {"@type": "Thing", "name": "Autogen"},
+    {"@type": "Thing", "name": "Mastra"}
+  ],
+  "isPartOf": {
+    "@type": "CreativeWork",
+    "name": "How to Build an AI Agent",
+    "url": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".tldr", ".definition", ".faq"]
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is an AI agent orchestration framework?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An AI agent orchestration framework is a library that handles the runtime mechanics of running a multi-step agent: the agent loop, tool calling, state, retries, and (often) multi-agent coordination. LangGraph, CrewAI, Autogen, and Mastra are the four most common shortlist candidates in 2026. None of them are required — many production agents run on plain code with the model SDK directly."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which AI agent framework is best for production in 2026?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There is no single winner — pick by shape. LangGraph for explicit state machines and structured control flow. CrewAI for fast prototyping of role-based multi-agent setups. Autogen for research-style multi-agent conversations. Mastra for TypeScript-native teams shipping inside a Node app. For a single-agentic-node workflow, no framework at all is often the best choice."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need a framework to build an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Most production agents in 2026 can be built directly against the model SDK (Anthropic, OpenAI) with a 200-line loop. A framework starts paying off when you need explicit state machines, multi-agent coordination, or built-in trace plumbing for evals and observability. Below that bar, the framework is overhead."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between LangGraph and CrewAI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "LangGraph models the agent as an explicit state machine — you declare nodes, edges, and conditional transitions; the framework runs the loop. CrewAI models the agent as a team of roles with a manager — you declare agents, goals, and tasks; the framework decides routing. LangGraph trades verbosity for control; CrewAI trades control for speed of setup."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Autogen still worth using in 2026?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, for research-style multi-agent conversations and experimentation. Autogen pioneered the multi-agent chat pattern and remains the cleanest way to set up two or three specialized agents that talk to each other. It is less production-friendly than LangGraph for single-agent flows; treat it as a tool for the multi-agent slice of the problem, not the whole stack."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://jayzeedesign.github.io/superdesign-site/"},
+    {"@type": "ListItem", "position": 2, "name": "AI Agents", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"},
+    {"@type": "ListItem", "position": 3, "name": "Orchestration Framework Comparison", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agent-orchestration-framework/"}
+  ]
+}
+</script>
+
+<style>
+  .article-wrap{padding:56px 0 24px}
+  .breadcrumb{font-size:13px;color:var(--text-dim);margin:0 0 18px;letter-spacing:.02em}
+  .breadcrumb a{color:var(--text-dim)}
+  .breadcrumb a:hover{color:var(--text);text-decoration:none}
+  .article-header{max-width:760px;margin:0 auto}
+  .article-header h1{font-size:clamp(30px,4vw,42px);line-height:1.1;margin:0 0 18px}
+  .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-dim);font-size:14px;margin:0 0 8px}
+  .article-meta .dot{opacity:.5}
+  .prose{max-width:760px;margin:0 auto;padding:8px 0 56px;font-size:18px;line-height:1.7}
+  .prose h2{font-size:clamp(24px,3vw,30px);margin:48px 0 14px;letter-spacing:-.01em}
+  .prose h3{font-size:20px;margin:28px 0 8px}
+  .prose p{color:var(--text);margin:0 0 16px}
+  .prose ul,.prose ol{color:var(--text);padding-left:22px;margin:0 0 18px}
+  .prose li{margin:0 0 8px}
+  .prose code{background:#161a23;border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:14px;color:#d6dbe7}
+  .prose pre{background:#0e1119;border:1px solid var(--border);padding:16px 18px;border-radius:12px;overflow-x:auto;margin:0 0 18px}
+  .prose pre code{background:none;border:0;padding:0}
+  .prose strong{color:#fff}
+  .prose table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:15px}
+  .prose th,.prose td{border:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top}
+  .prose th{background:#11141b;color:#fff;font-weight:600}
+  .tldr{
+    background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.06));
+    border:1px solid rgba(124,92,255,.35);
+    border-radius:var(--radius);
+    padding:22px 26px;margin:18px 0 28px;
+  }
+  .tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2)}
+  .tldr ul{margin:0;padding-left:20px}
+  .tldr li{color:var(--text);margin:6px 0}
+  .definition{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius);
+    padding:20px 22px;margin:24px 0;
+  }
+  .definition .label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px}
+  .definition .term{font-weight:700;color:#fff;margin:0 0 6px;font-size:18px}
+  .definition p{margin:0;color:var(--text-dim)}
+  .callout{
+    background:#11141b;border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 20px;margin:18px 0;color:var(--text-dim);font-size:16px;
+  }
+  .callout strong{color:#fff}
+  .faq{margin:32px 0 0}
+  .faq h2{margin-bottom:18px}
+  .faq details{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 20px;margin:0 0 10px;
+  }
+  .faq details[open]{border-color:rgba(124,92,255,.45)}
+  .faq summary{cursor:pointer;font-weight:600;color:#fff;list-style:none;font-size:17px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";float:right;color:var(--accent-2);font-size:22px;line-height:1}
+  .faq details[open] summary::after{content:"–"}
+  .faq details > p{margin:10px 0 0;color:var(--text-dim);font-size:16px;line-height:1.65}
+  .next-reads{margin:48px 0 8px}
+  .next-reads h2{margin-bottom:14px}
+  .next-reads ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .next-reads li{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .next-reads a{color:#fff;font-weight:600}
+  .next-reads p{margin:6px 0 0;color:var(--text-dim);font-size:14px}
+  .author-line{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:14px;margin:0 0 26px}
+  .author-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:inline-block}
+  @media (max-width:860px){
+    .article-wrap{padding:32px 0 16px}
+    .prose{font-size:17px}
+    .next-reads ul{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="../" aria-label="Superdesign home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Superdesign</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="../#how">How it works</a></li>
+        <li><a href="../#features">Features</a></li>
+        <li><a href="../ai-agents/">AI Agents</a></li>
+        <li><a href="../#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article-wrap">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a> &rsaquo; <a href="../ai-agents/">AI Agents</a> &rsaquo; <span>Orchestration Framework Comparison</span>
+      </nav>
+
+      <header class="article-header">
+        <p class="eyebrow">Cluster guide · AI agents</p>
+        <h1>AI Agent Orchestration Framework Comparison: LangGraph, CrewAI, Autogen, Mastra</h1>
+        <p class="article-meta">
+          <span>Updated 27 May 2026</span><span class="dot">·</span>
+          <span>~9 min read</span><span class="dot">·</span>
+          <span>For founders choosing an agent stack</span>
+        </p>
+        <p class="author-line"><span class="author-dot" aria-hidden="true"></span><span>By the Superdesign team</span></p>
+
+        <section class="tldr" aria-label="TL;DR">
+          <h2>TL;DR</h2>
+          <ul>
+            <li>Four frameworks worth shortlisting in 2026: <strong>LangGraph, CrewAI, Autogen, Mastra</strong>. Each one is best at a specific shape — none is best across the board.</li>
+            <li><strong>LangGraph</strong> for explicit state machines and production single-agent flows in Python.</li>
+            <li><strong>CrewAI</strong> for fast prototyping of role-based multi-agent setups when "team of agents" is the natural metaphor.</li>
+            <li><strong>Autogen</strong> for research-style multi-agent conversations; less production-friendly, but the cleanest mental model for two-or-three-agents-talking.</li>
+            <li><strong>Mastra</strong> for TypeScript / Node-native teams who want an opinionated agent runtime inside their existing app.</li>
+            <li>And one underrated option: <strong>no framework</strong>. A 200-line loop against the model SDK is the right call for ~60% of early-stage agent projects.</li>
+          </ul>
+        </section>
+      </header>
+
+      <div class="prose">
+
+        <section class="definition" aria-label="Definition">
+          <p class="label">Definition</p>
+          <p class="term">AI agent orchestration framework</p>
+          <p>A library that handles the runtime mechanics of running a multi-step AI agent: the agent loop, tool calling, state, retries, and (often) multi-agent coordination. The framework's job is to keep the loop coherent and the trace inspectable. The job it cannot do for you is figure out whether your problem actually needs an agent in the first place.</p>
+        </section>
+
+        <p>The framework question is the second most common architecture question we hear from AI founders in 2026, right after <a href="../ai-agent-vs-llm-workflow/">"agent or workflow?"</a>. The honest answer is: this matters much less than you think, and you can change your mind in a weekend if your code is structured well. The honest, longer answer is that the four frameworks differ enough that picking the wrong one for your shape can cost you a month of yak-shaving you did not budget for.</p>
+
+        <p>This post is the comparison we wish someone had handed us before our first agent shipped. It is opinionated. The order below reflects how often we reach for each one for production work — not the GitHub-star order, which is misleading. If you have not read the <a href="../ai-agents/#orchestration">orchestration section of our AI agent pillar</a>, skim it first; this post picks up there.</p>
+
+        <h2 id="at-a-glance">At a glance</h2>
+
+        <table>
+          <thead>
+            <tr><th>Framework</th><th>Language</th><th>Best at</th><th>Watch out for</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>LangGraph</strong></td><td>Python (TS available)</td><td>Explicit state machines, production single-agent</td><td>Verbosity; tied to LangChain ecosystem assumptions</td></tr>
+            <tr><td><strong>CrewAI</strong></td><td>Python</td><td>Role-based multi-agent prototypes</td><td>Less control over loop; surprising costs on long tasks</td></tr>
+            <tr><td><strong>Autogen</strong></td><td>Python</td><td>Research-style multi-agent conversation</td><td>API churn; less of a "drop into a SaaS" fit</td></tr>
+            <tr><td><strong>Mastra</strong></td><td>TypeScript / Node</td><td>TS-native single-agent in an existing Node app</td><td>Younger ecosystem; fewer community examples</td></tr>
+            <tr><td><strong>None (model SDK)</strong></td><td>Any</td><td>Single-agentic-node workflows; total control</td><td>You own the loop; no built-in trace plumbing</td></tr>
+          </tbody>
+        </table>
+
+        <p>The rest of this post unpacks each one with the questions we actually ask before reaching for it.</p>
+
+        <h2 id="langgraph">LangGraph</h2>
+
+        <p>LangGraph models an agent as an explicit state machine: you declare nodes, edges, and conditional transitions; the framework runs the loop, persists state, and exposes the graph to observability tooling. It's the most production-friendly framework on this list for a single agentic flow.</p>
+
+        <p><strong>Use it when:</strong> you want the agent's control flow to be readable in code review, you need durable state (resume an interrupted run), and you are comfortable inside the LangChain ecosystem (LangSmith for traces, LangChain integrations for tools). It is the safest pick for a single agentic node embedded inside a larger workflow.</p>
+
+        <p><strong>Skip it when:</strong> you want minimum dependencies, you find LangChain's abstractions painful, or you are not in Python. The TypeScript port works but lags features; bet on the Python side first.</p>
+
+        <p><strong>Eval angle:</strong> LangGraph's trace format is one of the easier ones to consume from an <a href="../ai-agent-evals/">eval rig</a>. The state object is serializable, and the per-node spans line up with the trajectory-quality scoring we recommend.</p>
+
+        <h2 id="crewai">CrewAI</h2>
+
+        <p>CrewAI is the fastest way to stand up "a team of agents" as a metaphor: you declare three or four role-shaped agents (Researcher, Writer, Editor) with goals, you write tasks, and CrewAI handles routing. The Hello World is shorter than any of the others.</p>
+
+        <p><strong>Use it when:</strong> the natural shape of your problem is "a team of specialists," you want to ship a demo this week, and the input domain is constrained enough that runaway loops are not yet your top worry. Excellent for internal tools and for spiking a feature before you decide what it really wants to be.</p>
+
+        <p><strong>Skip it when:</strong> you need fine-grained control over the agent loop, you are watching unit economics carefully, or you are shipping to thousands of users without a hard budget cap. CrewAI's defaults favour "the team keeps working until the task is done," and the natural unit of work can run long.</p>
+
+        <p><strong>Eval angle:</strong> the multi-agent chat structure inflates trace size — strip the framework chatter before your <a href="../ai-agent-evals/">eval judge</a> sees it, or your trajectory-quality scores will be measuring CrewAI's verbosity instead of your agent's reasoning.</p>
+
+        <h2 id="autogen">Autogen</h2>
+
+        <p>Autogen pioneered the multi-agent conversation pattern in 2023. In 2026 it is still the cleanest mental model for "two or three specialised agents that talk to each other to solve a problem" — a UserProxyAgent that runs code, an AssistantAgent that plans, and a critic agent that pushes back. The mental model maps well to a lot of research-style problem-solving.</p>
+
+        <p><strong>Use it when:</strong> the problem genuinely needs multiple agents arguing — code generation with a runner and a reviewer, research with a planner and a critic, debate-style prompting. Autogen also has the strongest "let an agent execute code in a sandbox" story out of the box.</p>
+
+        <p><strong>Skip it when:</strong> your product is a SaaS feature, not a research notebook. The API has churned more than the others between 0.x and 1.x; budget time for migration if you pin to a recent version. Single-agent production loops are usually better in LangGraph or no framework.</p>
+
+        <p><strong>Eval angle:</strong> multi-agent traces are dense. We typically score Autogen flows by collapsing per-agent turns into a single trajectory and grading on outcome plus per-agent contribution, rather than treating each agent's calls as independent. This is more eval work than single-agent setups.</p>
+
+        <h2 id="mastra">Mastra</h2>
+
+        <p>Mastra is the youngest of the four and the only one that is TypeScript-first. If your product is a Node app — a Next.js SaaS, an Astro site, a Bun service — Mastra slots in without making you stand up a Python sidecar. It bundles agents, workflows, memory, and tools into one opinionated runtime.</p>
+
+        <p><strong>Use it when:</strong> your team is TS / Node, you want one framework for both deterministic workflows and agentic nodes, and you do not want to maintain a Python service just to run the agent. It pairs well with the <a href="../ai-agent-vs-llm-workflow/">one-agentic-node-inside-a-workflow</a> pattern we recommend most often.</p>
+
+        <p><strong>Skip it when:</strong> you want the deepest community of examples (Python still wins by 10×), you need a specific integration that is Python-only, or you require a battle-tested LTS release. Mastra is moving fast; that is good if you can keep up and bad if you cannot.</p>
+
+        <p><strong>Eval angle:</strong> Mastra emits OpenTelemetry-style traces out of the box, which means your <a href="../ai-agent-evals/">eval rig</a> can consume them with a few-line adapter. This is the cleanest of the four on observability ergonomics for TS teams.</p>
+
+        <h2 id="no-framework">No framework: a 200-line loop</h2>
+
+        <p>About 60% of the early-stage agent projects we have looked at in the last six months did not need any framework. They needed a clear loop, decent prompts, a tool registry, and a step cap. That fits in 200 lines of Python or TypeScript. The model SDKs (Anthropic, OpenAI) already do tool calling and streaming; everything else is your specific business logic.</p>
+
+        <pre><code># pseudo-code, ~the shape
+state = init_state(user_input)
+for step in range(MAX_STEPS):
+    response = model.chat(state.messages, tools=TOOLS)
+    if response.tool_calls:
+        for call in response.tool_calls:
+            result = TOOLS[call.name](**call.args)
+            state.append_tool_result(call.id, result)
+    else:
+        return response.content
+raise StepLimitExceeded()</code></pre>
+
+        <p><strong>Use this when:</strong> you have one agentic node in an otherwise deterministic workflow, you want to control every line, your team's seniority is high enough that a few hundred lines of orchestration is not the bottleneck, or you simply do not want another dependency in your stack.</p>
+
+        <p><strong>Skip it when:</strong> you genuinely need multi-agent coordination, durable state across process restarts, or a graph that has grown past ~6 nodes. At that point the framework is paying for itself.</p>
+
+        <p>This is the path we default to for our own work. Plain code is the cheapest thing to debug at 2 a.m., and the easiest thing to swap models inside of when the next frontier model lands.</p>
+
+        <h2 id="picking">How we actually pick</h2>
+
+        <p>The shortest decision tree we use:</p>
+
+        <ol>
+          <li><strong>Is the team in TypeScript?</strong> → Mastra, or no framework.</li>
+          <li><strong>Is it genuinely multi-agent (two or more specialised models talking)?</strong> → Autogen or CrewAI. Pick CrewAI for product, Autogen for research.</li>
+          <li><strong>Is it a single agentic loop in production?</strong> → LangGraph, or no framework. Pick LangGraph if you want durable state and built-in trace tooling; pick no framework if you want full control and minimum deps.</li>
+          <li><strong>Are you not sure yet?</strong> → no framework. The two hundred lines you write to ship are also the spec you will use to evaluate which framework actually maps to your problem.</li>
+        </ol>
+
+        <p>None of those answers are "always wrong." All of them can be revised in a week once you have a real workload to test against.</p>
+
+        <h2 id="anti-patterns">Anti-patterns we keep seeing</h2>
+
+        <ul>
+          <li><strong>Picking a framework before the agent has earned the upgrade from a workflow.</strong> If your product is a workflow with one model call, none of these frameworks help. See <a href="../ai-agent-vs-llm-workflow/">AI agent vs. LLM workflow</a> for the decision.</li>
+          <li><strong>Rewriting the framework's defaults.</strong> If you find yourself fighting the framework's loop / memory / routing on day three, you picked the wrong one. Switch sooner, not later — sunk-cost on a framework is real.</li>
+          <li><strong>Treating the framework as a substitute for evals.</strong> No framework will tell you whether your agent got better or worse this week. You still need a <a href="../ai-agent-evals/">real eval rig</a>; the framework only makes the trace easier to read.</li>
+          <li><strong>Picking the framework with the most stars.</strong> The most-starred framework today might be EOL in eighteen months. Pick by shape, by language, by who is using it for serious production work — not by the README.</li>
+          <li><strong>Building "memory" with whichever the framework ships.</strong> Memory choices have their own physics. See <a href="../ai-agent-memory-patterns/">AI agent memory patterns</a> — most teams should ignore the framework's "memory" abstraction and store working memory in their own database.</li>
+        </ul>
+
+        <h2 id="future-proofing">Future-proofing</h2>
+
+        <p>The frameworks will keep churning. Our rule for keeping the agent code resilient to framework churn:</p>
+
+        <ul>
+          <li>Keep your <strong>tools</strong> framework-agnostic — they should be plain functions with typed signatures, not framework-specific tool classes.</li>
+          <li>Keep your <strong>prompts</strong> in plain markdown / template files, not framework-specific objects.</li>
+          <li>Keep <strong>evals</strong> outside the framework — they should be able to score traces from any framework, not just the one you happen to be on this quarter.</li>
+        </ul>
+
+        <p>If you keep those three boundaries clean, swapping LangGraph for Mastra for no-framework becomes a one-or-two-day change rather than a re-architecture. The framework is a runtime, not a religion.</p>
+
+        <h2 id="faq">FAQ</h2>
+
+        <section class="faq" aria-label="Frequently asked questions">
+
+          <details>
+            <summary>What is an AI agent orchestration framework?</summary>
+            <p>A library that handles the runtime mechanics of running a multi-step agent — the agent loop, tool calling, state, retries, and often multi-agent coordination. LangGraph, CrewAI, Autogen, and Mastra are the most common 2026 shortlist. None of them are required.</p>
+          </details>
+
+          <details>
+            <summary>Which AI agent framework is best for production in 2026?</summary>
+            <p>There is no single winner. LangGraph for explicit state machines and production single-agent flows. CrewAI for fast role-based multi-agent prototypes. Autogen for research-style multi-agent conversations. Mastra for TypeScript-native teams. For a single agentic node embedded in a workflow, no framework at all is often the right call.</p>
+          </details>
+
+          <details>
+            <summary>Do I need a framework to build an AI agent?</summary>
+            <p>No. Most production agents in 2026 can be built directly against the model SDK with a ~200-line loop. A framework starts paying off when you need explicit state machines, multi-agent coordination, or built-in trace plumbing for evals and observability.</p>
+          </details>
+
+          <details>
+            <summary>What is the difference between LangGraph and CrewAI?</summary>
+            <p>LangGraph models the agent as an explicit state machine — you declare nodes, edges, and conditional transitions. CrewAI models the agent as a team of roles with a manager — you declare agents, goals, and tasks. LangGraph trades verbosity for control; CrewAI trades control for speed of setup.</p>
+          </details>
+
+          <details>
+            <summary>Is Autogen still worth using in 2026?</summary>
+            <p>Yes, for research-style multi-agent conversations and experimentation. It remains the cleanest mental model for two or three specialised agents that talk to each other. For single-agent production flows it is less ergonomic than LangGraph or plain code.</p>
+          </details>
+
+          <details>
+            <summary>Should I pick a framework based on GitHub stars?</summary>
+            <p>No. The most-starred framework today might be EOL in eighteen months. Pick by shape (single agent vs multi-agent), by language (Python vs TypeScript), and by who is using it for production work that resembles yours.</p>
+          </details>
+
+          <details>
+            <summary>Can I switch frameworks later if I pick wrong?</summary>
+            <p>Yes, if you keep three boundaries clean: tools as plain functions with typed signatures, prompts in plain text / markdown files, and evals as a separate process that consumes traces. With those in place, swapping frameworks is a one-or-two-day change rather than a re-architecture.</p>
+          </details>
+
+        </section>
+
+        <section class="next-reads" aria-label="Continue reading">
+          <h2>Continue reading the AI agents cluster</h2>
+          <ul>
+            <li><a href="../ai-agents/">How to build an AI agent</a><p>The full pillar guide — architecture, memory, evals, orchestration, observability.</p></li>
+            <li><a href="../ai-agent-vs-llm-workflow/">AI agent vs. LLM workflow</a><p>Decide between an agent and a workflow before you pick a framework. Most projects need the workflow.</p></li>
+            <li><a href="../ai-agent-evals/">AI agent evals</a><p>The eval rig that consumes traces from any of these frameworks. Pair with whichever you pick.</p></li>
+            <li><a href="../ai-agent-memory-patterns/">AI agent memory patterns</a><p>Working, episodic, and semantic memory — and why you usually want your own storage, not the framework's.</p></li>
+          </ul>
+        </section>
+
+        <div class="callout" style="margin-top:40px">
+          <strong>Building an AI product?</strong> Superdesign is an AI design agent for early-stage founders building AI products. If the UI is the bottleneck on your launch, <a href="../#contact">talk to us</a>.
+        </div>
+
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <p>&copy; <span>2026</span> Superdesign. An AI design agent for founders building AI products.</p>
+    <ul class="footer-nav">
+      <li><a href="../">Home</a></li>
+      <li><a href="../ai-agents/">AI Agents</a></li>
+      <li><a href="../#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

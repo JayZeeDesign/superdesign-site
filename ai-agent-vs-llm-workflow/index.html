@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Agent vs. LLM Workflow: How to Decide (2026)</title>
+<meta name="description" content="A decision framework for choosing between an AI agent and a fixed LLM workflow. Five questions that tell you which one to build — and why most teams pick the wrong one first.">
+<link rel="canonical" href="https://jayzeedesign.github.io/superdesign-site/ai-agent-vs-llm-workflow/">
+<meta name="theme-color" content="#0b0d12">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<!-- Search engine verification (SUP-10). -->
+<!-- <meta name="google-site-verification" content="REPLACE_WITH_GSC_TOKEN"> -->
+<!-- <meta name="msvalidate.01" content="REPLACE_WITH_BING_WMT_TOKEN"> -->
+<meta name="indexnow" content="5bdc3cf653e9a956f932ad416367e882">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI Agent vs. LLM Workflow: How to Decide">
+<meta property="og:description" content="A five-question decision framework. If the answers point at a workflow, build the workflow. Agents are not the default.">
+<meta property="og:url" content="https://jayzeedesign.github.io/superdesign-site/ai-agent-vs-llm-workflow/">
+<meta property="og:site_name" content="Superdesign">
+<meta property="og:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="AI agent vs LLM workflow — Superdesign cluster guide">
+<meta property="article:published_time" content="2026-05-27">
+<meta property="article:modified_time" content="2026-05-27">
+<meta property="article:section" content="AI Agents">
+<meta property="article:tag" content="AI agents">
+<meta property="article:tag" content="LLM workflows">
+<meta property="article:tag" content="AI engineering">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI Agent vs. LLM Workflow: How to Decide">
+<meta name="twitter:description" content="Five questions, one decision. Agents are not the default — and most teams pick wrong first.">
+<meta name="twitter:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preload" as="style" href="../styles.css">
+<link rel="stylesheet" href="../styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "AI Agent vs. LLM Workflow: How to Decide (2026)",
+  "description": "A founder-grade decision framework for choosing between an AI agent and a fixed LLM workflow. Five questions, one answer.",
+  "datePublished": "2026-05-27",
+  "dateModified": "2026-05-27",
+  "inLanguage": "en",
+  "url": "https://jayzeedesign.github.io/superdesign-site/ai-agent-vs-llm-workflow/",
+  "mainEntityOfPage": "https://jayzeedesign.github.io/superdesign-site/ai-agent-vs-llm-workflow/",
+  "image": "https://jayzeedesign.github.io/superdesign-site/og.svg",
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Early-stage founders building AI products"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "about": [
+    {"@type": "Thing", "name": "AI agents"},
+    {"@type": "Thing", "name": "LLM workflows"},
+    {"@type": "Thing", "name": "AI architecture decisions"}
+  ],
+  "isPartOf": {
+    "@type": "CreativeWork",
+    "name": "How to Build an AI Agent",
+    "url": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".tldr", ".definition", ".faq"]
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the difference between an AI agent and an LLM workflow?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An LLM workflow is a fixed graph of model calls and tools — the path is decided at build time. An AI agent decides its own next step at runtime: it picks which tool to call, in what order, and when to stop. Workflows are predictable and cheap; agents are flexible and expensive. Most production systems are workflows with one or two agentic loops embedded inside them."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should I use an AI agent instead of a workflow?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use an agent when the input space is too varied to enumerate, when the right action depends on tool results you only see at runtime, or when you need genuine multi-step reasoning over an unknown surface. If you can draw the happy-path flowchart in fewer than ten boxes, a workflow is almost always the right call."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are AI agents more accurate than LLM workflows?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No — they are more flexible, which is different. Workflows are deterministic in structure and usually more accurate within their scope. Agents win when the scope is unbounded and a workflow cannot cover the input space without exploding into hundreds of branches."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why are LLM workflows cheaper than AI agents?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Workflows make a fixed number of model calls per request. Agents make a variable number because they decide when to stop, and that number is almost always higher than you expect. A workflow that needs three model calls becomes an agent that needs six to twelve on the same input. At scale, that delta is the entire P&L of the product."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I start with an LLM workflow and migrate to an agent later?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, and this is the path we recommend. Ship the workflow, learn the input distribution from real users, then identify the specific branch that genuinely needs runtime decision-making and turn that one node into an agent. You almost never need a fully agentic top-level loop on day one."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://jayzeedesign.github.io/superdesign-site/"},
+    {"@type": "ListItem", "position": 2, "name": "AI Agents", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"},
+    {"@type": "ListItem", "position": 3, "name": "AI Agent vs. LLM Workflow", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agent-vs-llm-workflow/"}
+  ]
+}
+</script>
+
+<style>
+  .article-wrap{padding:56px 0 24px}
+  .breadcrumb{font-size:13px;color:var(--text-dim);margin:0 0 18px;letter-spacing:.02em}
+  .breadcrumb a{color:var(--text-dim)}
+  .breadcrumb a:hover{color:var(--text);text-decoration:none}
+  .article-header{max-width:760px;margin:0 auto}
+  .article-header h1{font-size:clamp(30px,4vw,42px);line-height:1.1;margin:0 0 18px}
+  .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-dim);font-size:14px;margin:0 0 8px}
+  .article-meta .dot{opacity:.5}
+  .prose{max-width:760px;margin:0 auto;padding:8px 0 56px;font-size:18px;line-height:1.7}
+  .prose h2{font-size:clamp(24px,3vw,30px);margin:48px 0 14px;letter-spacing:-.01em}
+  .prose h3{font-size:20px;margin:28px 0 8px}
+  .prose p{color:var(--text);margin:0 0 16px}
+  .prose ul,.prose ol{color:var(--text);padding-left:22px;margin:0 0 18px}
+  .prose li{margin:0 0 8px}
+  .prose code{background:#161a23;border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:14px;color:#d6dbe7}
+  .prose pre{background:#0e1119;border:1px solid var(--border);padding:16px 18px;border-radius:12px;overflow-x:auto;margin:0 0 18px}
+  .prose pre code{background:none;border:0;padding:0}
+  .prose strong{color:#fff}
+  .prose table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:15px}
+  .prose th,.prose td{border:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top}
+  .prose th{background:#11141b;color:#fff;font-weight:600}
+  .tldr{
+    background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.06));
+    border:1px solid rgba(124,92,255,.35);
+    border-radius:var(--radius);
+    padding:22px 26px;margin:18px 0 28px;
+  }
+  .tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2)}
+  .tldr ul{margin:0;padding-left:20px}
+  .tldr li{color:var(--text);margin:6px 0}
+  .definition{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius);
+    padding:20px 22px;margin:24px 0;
+  }
+  .definition .label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px}
+  .definition .term{font-weight:700;color:#fff;margin:0 0 6px;font-size:18px}
+  .definition p{margin:0;color:var(--text-dim)}
+  .callout{
+    background:#11141b;border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 20px;margin:18px 0;color:var(--text-dim);font-size:16px;
+  }
+  .callout strong{color:#fff}
+  .faq{margin:32px 0 0}
+  .faq h2{margin-bottom:18px}
+  .faq details{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 20px;margin:0 0 10px;
+  }
+  .faq details[open]{border-color:rgba(124,92,255,.45)}
+  .faq summary{cursor:pointer;font-weight:600;color:#fff;list-style:none;font-size:17px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";float:right;color:var(--accent-2);font-size:22px;line-height:1}
+  .faq details[open] summary::after{content:"–"}
+  .faq details > p{margin:10px 0 0;color:var(--text-dim);font-size:16px;line-height:1.65}
+  .next-reads{margin:48px 0 8px}
+  .next-reads h2{margin-bottom:14px}
+  .next-reads ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .next-reads li{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .next-reads a{color:#fff;font-weight:600}
+  .next-reads p{margin:6px 0 0;color:var(--text-dim);font-size:14px}
+  .author-line{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:14px;margin:0 0 26px}
+  .author-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:inline-block}
+  @media (max-width:860px){
+    .article-wrap{padding:32px 0 16px}
+    .prose{font-size:17px}
+    .next-reads ul{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="../" aria-label="Superdesign home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Superdesign</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="../#how">How it works</a></li>
+        <li><a href="../#features">Features</a></li>
+        <li><a href="../ai-agents/">AI Agents</a></li>
+        <li><a href="../#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article-wrap">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a> &rsaquo; <a href="../ai-agents/">AI Agents</a> &rsaquo; <span>AI Agent vs. LLM Workflow</span>
+      </nav>
+
+      <header class="article-header">
+        <p class="eyebrow">Cluster guide · AI agents</p>
+        <h1>AI Agent vs. LLM Workflow: How to Decide</h1>
+        <p class="article-meta">
+          <span>Updated 27 May 2026</span><span class="dot">·</span>
+          <span>~8 min read</span><span class="dot">·</span>
+          <span>For founders shipping AI products</span>
+        </p>
+        <p class="author-line"><span class="author-dot" aria-hidden="true"></span><span>By the Superdesign team</span></p>
+
+        <section class="tldr" aria-label="TL;DR">
+          <h2>TL;DR</h2>
+          <ul>
+            <li><strong>Workflows are the default.</strong> Agents are the exception — used when the input space is too varied to enumerate.</li>
+            <li>If you can draw the happy path in fewer than ten boxes, build a workflow. A workflow with one agentic node beats a fully agentic loop nine times out of ten.</li>
+            <li>Agents cost 3–10× more per request than the equivalent workflow because they decide when to stop, and "when to stop" is usually later than you think.</li>
+            <li>The five questions in this post will tell you which one to build in about ten minutes.</li>
+            <li>Migrate <em>up</em> — workflow first, agent later, only on the specific branch that needs it.</li>
+          </ul>
+        </section>
+      </header>
+
+      <div class="prose">
+
+        <section class="definition" aria-label="Definition">
+          <p class="label">Definition</p>
+          <p class="term">AI agent vs. LLM workflow</p>
+          <p>A <strong>workflow</strong> is a fixed directed graph of model calls and tool calls — the path is chosen by the engineer at build time. An <strong>agent</strong> picks its own next step at runtime, deciding which tool to call, in what order, and when to stop. Workflows are predictable and cheap; agents are flexible and expensive. Most production systems are workflows with one or two agentic nodes embedded inside them.</p>
+        </section>
+
+        <p>"Should we build an agent or a workflow?" is the most common architecture question we hear from early-stage AI founders in 2026. The honest answer is almost always: <strong>workflow first, agent later, on one specific node</strong>. But the framework documentation, the conference talks, and the hot Twitter threads all push the other way — they make agents sound like the default, and workflows sound like training wheels.</p>
+
+        <p>They are not. Workflows ship. Workflows are debuggable. Workflows have predictable unit economics. Most of the AI products you have used and not noticed were AI are workflows. Cursor's autocomplete is a workflow. Most of Notion AI is a workflow. The "rewrite this email" button is a workflow.</p>
+
+        <p>This post is the decision framework we wish someone had handed us in week one. If you have not read the <a href="../ai-agents/#workflow-vs-agent">workflow vs. agent section of our AI agent pillar</a>, skim it first — this piece picks up where that one stops and walks through five concrete questions.</p>
+
+        <h2 id="what-changes">What actually changes between the two</h2>
+
+        <p>The vocabulary in this space is loose, so let's pin it down. An LLM workflow is a graph. You wrote it. It does the same shape of work every time: maybe "classify → extract → format → return," maybe "search → summarize → cite," maybe a tree of conditional branches. The model calls are nodes; the edges are written in your code. An agent is also a graph, but one of the nodes is a <em>loop</em> in which the model decides what node to visit next from a set of tools.</p>
+
+        <p>That single architectural difference cascades into everything else:</p>
+
+        <table>
+          <thead>
+            <tr><th>Dimension</th><th>LLM workflow</th><th>AI agent</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Number of model calls per request</td><td>Fixed at build time</td><td>Variable, decided at runtime</td></tr>
+            <tr><td>Cost per request</td><td>Predictable, narrow range</td><td>3–10× higher, wider distribution</td></tr>
+            <tr><td>Latency profile</td><td>Bounded by graph depth</td><td>Unbounded; needs a step cap</td></tr>
+            <tr><td>Debuggability</td><td>Stack traces line up with graph nodes</td><td>Requires trajectory inspection</td></tr>
+            <tr><td>Eval surface</td><td>Per-node, isolatable</td><td>Whole-trajectory, see <a href="../ai-agent-evals/">AI agent evals</a></td></tr>
+            <tr><td>Memory</td><td>Often stateless per request</td><td>Working + sometimes long-term, see <a href="../ai-agent-memory-patterns/">AI agent memory patterns</a></td></tr>
+            <tr><td>Failure mode</td><td>Quality regression on specific input</td><td>Loops, thrashing, runaway cost</td></tr>
+            <tr><td>Time to ship a v1</td><td>Days</td><td>Weeks (because you need evals + step caps + observability)</td></tr>
+          </tbody>
+        </table>
+
+        <p>The right way to read that table: an agent is not a workflow with magic added. It is a workflow with one of the constraints removed — the "path is fixed" constraint. That removal buys you flexibility and costs you almost everything else.</p>
+
+        <h2 id="five-questions">The five questions</h2>
+
+        <p>Answer these in order. If three or more answers point at "agent," build an agent. Otherwise, build a workflow.</p>
+
+        <h3>1. Can you enumerate the inputs?</h3>
+
+        <p>If the input space is small enough to list — say, ten categories of email, twelve document types, three onboarding flows — a workflow with a classifier at the top is the right call. Each category becomes its own branch, each branch a tiny dedicated pipeline. You will get higher accuracy than an agent, lower cost, and you can iterate per branch.</p>
+
+        <p>If the input space is genuinely unbounded — code in any language, customer support tickets covering the full surface of a SaaS product, research questions across the open web — enumeration falls apart. That's an agent signal.</p>
+
+        <h3>2. Does the next step depend on tool results?</h3>
+
+        <p>Workflows handle "fetch the user → format the user" beautifully. They handle "fetch the user, and <em>if</em> the user is on the Pro plan, also fetch invoices, but <em>only if</em> the most recent invoice failed, then look up the failure reason" worse and worse the deeper the conditional tree gets.</p>
+
+        <p>Once you have three or more levels of conditional logic that depend on what comes back from tools, you are either writing a router-of-routers (painful, brittle, slow to extend) or you are accidentally writing an agent. Just write the agent.</p>
+
+        <h3>3. Is the task one-shot or multi-turn?</h3>
+
+        <p>One-shot tasks ("summarize this," "extract these fields," "rewrite this in a friendlier tone") almost never need an agent. The decision space is one decision wide. Wrap a single model call in nice code and ship.</p>
+
+        <p>Multi-turn tasks ("help me debug this codebase," "do this research and write a report," "respond to this customer with the right info from our knowledge base, billing system, and CRM") are where agents start earning their cost. There are <em>real</em> sequential decisions to make and the engineer cannot make them ahead of time.</p>
+
+        <h3>4. Does the cost / latency math work?</h3>
+
+        <p>Workflows have tight cost distributions: P50 and P99 differ by maybe 2×. Agents have heavy tails: a P50 of 4 model calls and a P99 of 28. If your unit economics work at P99, you can ship the agent. If they only work at P50, you have a time bomb — one bad day of user inputs will blow your COGS and you will have no way to clamp it without losing quality.</p>
+
+        <p>Run the napkin math before you commit. Median agent cost × P99 multiplier × daily volume. If that number kills the gross margin, the agent is not the answer this quarter.</p>
+
+        <h3>5. Do you have evals?</h3>
+
+        <p>This is the dealbreaker. Agents without evals are unfalsifiable — there is no way to tell whether your latest prompt change made things better or worse, and you will not catch the regression until a user complains. Workflows tolerate vibe-based testing for longer because the surface is smaller. Agents do not.</p>
+
+        <p>If you cannot commit a week to building the eval rig before the agent goes to production, default to the workflow. We walk through the cheapest 90% solution in <a href="../ai-agent-evals/">AI agent evals: a practical setup for early-stage teams</a> — thirty cases, three axes, ~24 hours of work. If even that is too much, you do not yet have the operational maturity to run an agent in production.</p>
+
+        <h2 id="hybrid">The hybrid: one agentic node inside a workflow</h2>
+
+        <p>The shape we see ship most often in 2026 is not "pure workflow" and not "pure agent." It is a workflow with one agentic node, usually in the middle, where the input distribution genuinely demands it.</p>
+
+        <pre><code>request → classify (model)
+        → fetch context (deterministic)
+        → AGENTIC NODE (model + tools, bounded loop)
+        → format response (model)
+        → audit (deterministic)
+        → return</code></pre>
+
+        <p>Most of the request budget is in deterministic code. The "smart" part is contained, observable, and step-capped. When the agent misbehaves, the blast radius is one node, not the whole product. When you need to A/B test a change to the agentic step, you have a fixture for the input and an assertion for the output. The agentic node looks like an agent to its own internals and looks like a workflow node to the system that calls it. That's the trick.</p>
+
+        <p>This pattern also makes your <a href="../ai-agent-orchestration-framework/">orchestration framework choice</a> much smaller-stakes. You are not betting the whole product on LangGraph or CrewAI — you are betting one node on it, with the rest of the system in plain code you control.</p>
+
+        <h2 id="anti-patterns">Three anti-patterns we keep seeing</h2>
+
+        <ul>
+          <li><strong>"Agent-first because the framework demo looked cool."</strong> Most framework demos are agents because demos need to be impressive. Your product needs to be reliable. Different goal, different architecture.</li>
+          <li><strong>Treating the agent as the product instead of a component.</strong> If your homepage says "AI agent that does X," your users still want X done predictably. They do not care about the architecture. Pick whichever delivers X more reliably this quarter.</li>
+          <li><strong>No step cap, no cost cap.</strong> Every agent in production needs a hard ceiling on (a) number of model calls, (b) total tokens, (c) wall-clock time, and (d) tool invocations per type. Without all four, one weird user input becomes a $4,000 OpenAI bill before you notice.</li>
+        </ul>
+
+        <h2 id="migrate-up">Migrate up, not down</h2>
+
+        <p>Shipping a workflow and then upgrading one node to an agent is straightforward. Shipping an agent and then "simplifying back to a workflow" is a rewrite — by the time you decide to do it, the agent's behavior <em>is</em> the spec, and reverse-engineering that spec into a graph is hard.</p>
+
+        <p>So the operational rule is one-way: <strong>start with the simpler architecture you can defend, and upgrade the specific node that earns the upgrade.</strong> Workflow → workflow with agentic node → multi-agent system, in that order, and only when usage data forces the next step.</p>
+
+        <p>If you are at the "do I even need this?" stage, build the workflow this week. Read <a href="../ai-agents/">how to build an AI agent</a> for the full architecture map of where agentic loops fit; come back here when one of your nodes is genuinely outgrowing the graph.</p>
+
+        <h2 id="faq">FAQ</h2>
+
+        <section class="faq" aria-label="Frequently asked questions">
+
+          <details>
+            <summary>What is the difference between an AI agent and an LLM workflow?</summary>
+            <p>A workflow is a fixed graph of model calls and tools — the path is decided at build time. An agent decides its own next step at runtime: it picks which tool to call, in what order, and when to stop. Workflows are predictable and cheap; agents are flexible and expensive.</p>
+          </details>
+
+          <details>
+            <summary>When should I use an AI agent instead of a workflow?</summary>
+            <p>When the input space is too varied to enumerate, when the right action depends on tool results you only see at runtime, or when you need multi-step reasoning over an unknown surface. If you can draw the happy-path flowchart in under ten boxes, a workflow is almost always the right call.</p>
+          </details>
+
+          <details>
+            <summary>Are AI agents more accurate than LLM workflows?</summary>
+            <p>No — they are more flexible. Workflows are deterministic in structure and usually more accurate within their scope. Agents win when the scope is unbounded and a workflow would explode into hundreds of branches to cover the input space.</p>
+          </details>
+
+          <details>
+            <summary>Why are LLM workflows cheaper than AI agents?</summary>
+            <p>Workflows make a fixed number of model calls per request. Agents make a variable number because they decide when to stop, and that number is almost always higher than you expect. A workflow that needs three calls becomes an agent that needs six to twelve on the same input.</p>
+          </details>
+
+          <details>
+            <summary>Can I start with an LLM workflow and migrate to an agent later?</summary>
+            <p>Yes — and this is the path we recommend. Ship the workflow, learn the input distribution from real users, then turn the specific node that genuinely needs runtime decision-making into an agent. You almost never need a fully agentic top-level loop on day one.</p>
+          </details>
+
+          <details>
+            <summary>What is an example of a workflow that should not be an agent?</summary>
+            <p>"Summarize this PDF," "extract these five fields from a contract," "rewrite this email in a friendlier tone," and "classify this support ticket into one of ten categories" are all workflows. They have a fixed shape, a small input space, and no sequential decisions that depend on tool results. Wrapping any of them in an agent loop is pure overhead.</p>
+          </details>
+
+          <details>
+            <summary>What is an example of a task that genuinely needs an agent?</summary>
+            <p>"Investigate this customer's billing problem, looking at their account, their last three invoices, their support history, and the relevant docs, and propose a fix." The path depends on what the tools return, the number of steps is unbounded, and the tool calls have to be chosen at runtime. That is the canonical agent shape.</p>
+          </details>
+
+        </section>
+
+        <section class="next-reads" aria-label="Continue reading">
+          <h2>Continue reading the AI agents cluster</h2>
+          <ul>
+            <li><a href="../ai-agents/">How to build an AI agent</a><p>The full pillar guide — architecture, memory, evals, orchestration, observability.</p></li>
+            <li><a href="../ai-agent-evals/">AI agent evals</a><p>Thirty cases, three axes, ~24 hours of work. The minimum eval rig before you ship an agent.</p></li>
+            <li><a href="../ai-agent-memory-patterns/">AI agent memory patterns</a><p>Working, episodic, and semantic memory — when each one is worth the complexity.</p></li>
+            <li><a href="../ai-agent-orchestration-framework/">Orchestration framework comparison</a><p>LangGraph, CrewAI, Autogen, Mastra — and which fit a one-agentic-node workflow.</p></li>
+          </ul>
+        </section>
+
+        <div class="callout" style="margin-top:40px">
+          <strong>Building an AI product?</strong> Superdesign is an AI design agent for early-stage founders building AI products. If the UI is the bottleneck on your launch, <a href="../#contact">talk to us</a>.
+        </div>
+
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <p>&copy; <span>2026</span> Superdesign. An AI design agent for founders building AI products.</p>
+    <ul class="footer-nav">
+      <li><a href="../">Home</a></li>
+      <li><a href="../ai-agents/">AI Agents</a></li>
+      <li><a href="../#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

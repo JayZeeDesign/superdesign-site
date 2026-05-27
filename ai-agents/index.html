@@ -314,7 +314,7 @@ gtag('config', 'REPLACE_WITH_GA4_MEASUREMENT_ID', { anonymize_ip: true });
           <li><strong>An agent</strong> is a loop where the LLM picks the next node at runtime. You hand it a goal and a set of tools, and it decides which tool to call, what arguments to pass, when to stop. Coding assistants like Claude Code and Cursor's agent mode are agents. Devin is an agent (or claims to be). Most things that need to handle <em>open-ended</em> inputs are agents.</li>
         </ul>
 
-        <p>The practical rule: <strong>if you can draw the happy-path flowchart in fewer than ten boxes, build a workflow.</strong> Workflows are easier to test, cheaper to run, and faster to ship. Add agentic decisions only where the input space genuinely requires runtime branching. We go deeper in <a href="#" data-link-placeholder="ai-agent-vs-llm-workflow">AI agent vs. LLM workflow: how to choose</a>.</p>
+        <p>The practical rule: <strong>if you can draw the happy-path flowchart in fewer than ten boxes, build a workflow.</strong> Workflows are easier to test, cheaper to run, and faster to ship. Add agentic decisions only where the input space genuinely requires runtime branching. We go deeper in <a href="../ai-agent-vs-llm-workflow/">AI agent vs. LLM workflow: how to choose</a>.</p>
 
         <p>Founders systematically over-pick agents because agents demo better. A workflow that works 99% of the time looks boring on Twitter. An agent that occasionally writes a poem instead of a SQL query looks magical. Resist this. Magical is not a deployment posture.</p>
 
@@ -388,7 +388,7 @@ gtag('config', 'REPLACE_WITH_GA4_MEASUREMENT_ID', { anonymize_ip: true });
 
         <p>None of these is wrong. They solve different problems. <strong>The mistake is picking one before you can articulate which problem you're solving.</strong> Pick the smallest tool that does what you need today; the cost of switching frameworks once you understand your loop is a day of work, not a quarter.</p>
 
-        <p>For a deeper comparison with code examples, see <a href="#" data-link-placeholder="ai-agent-orchestration-framework">AI agent orchestration framework comparison</a>.</p>
+        <p>For a deeper comparison with code examples, see <a href="../ai-agent-orchestration-framework/">AI agent orchestration framework comparison</a>.</p>
 
         <h2 id="memory">Memory: where most agents quietly fail</h2>
 
@@ -402,7 +402,7 @@ gtag('config', 'REPLACE_WITH_GA4_MEASUREMENT_ID', { anonymize_ip: true });
           <li><strong>Semantic memory</strong> (a corpus the agent can search) — documentation, past tickets, product knowledge. <em>This</em> is what vector databases are for. If you don't have a corpus, you don't need one.</li>
         </ul>
 
-        <p>The pattern we see kill teams: they pick a vector DB on day one because tutorials mention RAG, then they jam working memory into it. Now the agent retrieves three months of unrelated chat fragments by similarity score and confuses itself. Use boring storage for boring problems. <a href="#" data-link-placeholder="ai-agent-memory-patterns">AI agent memory patterns: working, episodic, semantic</a> goes through the patterns with code.</p>
+        <p>The pattern we see kill teams: they pick a vector DB on day one because tutorials mention RAG, then they jam working memory into it. Now the agent retrieves three months of unrelated chat fragments by similarity score and confuses itself. Use boring storage for boring problems. <a href="../ai-agent-memory-patterns/">AI agent memory patterns: working, episodic, semantic</a> goes through the patterns with code.</p>
 
         <div class="callout">
           <strong>Founder-grade heuristic.</strong> Before adding any memory system, write down the exact prompt the agent would need to behave correctly. If that prompt is &lt; 4,000 tokens, you don't have a memory problem — you have a prompt-engineering problem.
@@ -420,7 +420,7 @@ gtag('config', 'REPLACE_WITH_GA4_MEASUREMENT_ID', { anonymize_ip: true });
           <li><strong>Tool correctness</strong> — for each tool call, were the arguments right? This is where regressions hide. A function that suddenly passes <code>null</code> for a required field will look "successful" until production breaks.</li>
         </ol>
 
-        <p>Eval data comes from the same places product feedback comes from: real user transcripts, bug reports, and edge cases your designer found while clicking around. The first ten cases will feel arbitrary; that's normal. By case 40 you'll have a usable signal. <a href="#" data-link-placeholder="ai-agent-evals">AI agent evals: a practical setup for early-stage teams</a> walks through the toolchain.</p>
+        <p>Eval data comes from the same places product feedback comes from: real user transcripts, bug reports, and edge cases your designer found while clicking around. The first ten cases will feel arbitrary; that's normal. By case 40 you'll have a usable signal. <a href="../ai-agent-evals/">AI agent evals: a practical setup for early-stage teams</a> walks through the toolchain.</p>
 
         <h2 id="observability">Observability and error handling in production</h2>
 
@@ -517,10 +517,10 @@ gtag('config', 'REPLACE_WITH_GA4_MEASUREMENT_ID', { anonymize_ip: true });
         <section class="next-reads" aria-label="Continue reading">
           <h2>Continue reading the AI agents cluster</h2>
           <ul>
-            <li><a href="#" data-link-placeholder="ai-agent-vs-llm-workflow">AI agent vs. LLM workflow</a><p>How to decide when you actually need an agent — and when a fixed graph is the right call.</p></li>
-            <li><a href="#" data-link-placeholder="ai-agent-evals">AI agent evals</a><p>A practical eval setup for early-stage teams: 30 cases, three axes, 24 hours of work.</p></li>
-            <li><a href="#" data-link-placeholder="ai-agent-memory-patterns">AI agent memory patterns</a><p>Working, episodic, and semantic memory — what each one is and which storage fits.</p></li>
-            <li><a href="#" data-link-placeholder="ai-agent-orchestration-framework">Orchestration framework comparison</a><p>LangGraph, CrewAI, Autogen, Mastra, and the case for none of them.</p></li>
+            <li><a href="../ai-agent-vs-llm-workflow/">AI agent vs. LLM workflow</a><p>How to decide when you actually need an agent — and when a fixed graph is the right call.</p></li>
+            <li><a href="../ai-agent-evals/">AI agent evals</a><p>A practical eval setup for early-stage teams: 30 cases, three axes, 24 hours of work.</p></li>
+            <li><a href="../ai-agent-memory-patterns/">AI agent memory patterns</a><p>Working, episodic, and semantic memory — what each one is and which storage fits.</p></li>
+            <li><a href="../ai-agent-orchestration-framework/">Orchestration framework comparison</a><p>LangGraph, CrewAI, Autogen, Mastra, and the case for none of them.</p></li>
             <li><a href="#" data-link-placeholder="production-ai-agent-architecture">Production agent architecture</a><p>A reference diagram with annotated code for the six-component loop.</p></li>
             <li><a href="#" data-link-placeholder="ai-agent-error-handling-retry-patterns">Error handling &amp; retry patterns</a><p>Network failures, tool errors, infinite loops — explicit policies for each.</p></li>
           </ul>

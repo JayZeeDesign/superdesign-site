@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Agent Evals: A Practical Setup for Early-Stage Teams (2026)</title>
+<meta name="description" content="A founder-friendly eval setup for AI agents: 30 hand-labeled cases, three scoring axes (task success, trajectory, tool correctness), and the toolchain to run it on every change.">
+<link rel="canonical" href="https://jayzeedesign.github.io/superdesign-site/ai-agent-evals/">
+<meta name="theme-color" content="#0b0d12">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<!-- Search engine verification (SUP-10). -->
+<!-- <meta name="google-site-verification" content="REPLACE_WITH_GSC_TOKEN"> -->
+<!-- <meta name="msvalidate.01" content="REPLACE_WITH_BING_WMT_TOKEN"> -->
+<meta name="indexnow" content="5bdc3cf653e9a956f932ad416367e882">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI Agent Evals: A Practical Setup for Early-Stage Teams">
+<meta property="og:description" content="30 cases, three axes, 24 hours of work. The founder-grade eval setup that catches the regressions your vibes-based testing misses.">
+<meta property="og:url" content="https://jayzeedesign.github.io/superdesign-site/ai-agent-evals/">
+<meta property="og:site_name" content="Superdesign">
+<meta property="og:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="AI agent evals — Superdesign cluster guide">
+<meta property="article:published_time" content="2026-05-27">
+<meta property="article:modified_time" content="2026-05-27">
+<meta property="article:section" content="AI Agents">
+<meta property="article:tag" content="AI agents">
+<meta property="article:tag" content="LLM evals">
+<meta property="article:tag" content="AI engineering">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI Agent Evals: A Practical Setup for Early-Stage Teams">
+<meta name="twitter:description" content="30 cases, three scoring axes, ~24 hours of work. The eval setup that catches regressions vibes-testing misses.">
+<meta name="twitter:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preload" as="style" href="../styles.css">
+<link rel="stylesheet" href="../styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "AI Agent Evals: A Practical Setup for Early-Stage Teams (2026)",
+  "description": "A founder-friendly eval setup for AI agents: 30 hand-labeled cases, three scoring axes, and the toolchain to run it on every change.",
+  "datePublished": "2026-05-27",
+  "dateModified": "2026-05-27",
+  "inLanguage": "en",
+  "url": "https://jayzeedesign.github.io/superdesign-site/ai-agent-evals/",
+  "mainEntityOfPage": "https://jayzeedesign.github.io/superdesign-site/ai-agent-evals/",
+  "image": "https://jayzeedesign.github.io/superdesign-site/og.svg",
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Early-stage founders building AI products"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "about": [
+    {"@type": "Thing", "name": "AI agent evaluation"},
+    {"@type": "Thing", "name": "LLM testing"},
+    {"@type": "Thing", "name": "Agent quality"}
+  ],
+  "isPartOf": {
+    "@type": "CreativeWork",
+    "name": "How to Build an AI Agent",
+    "url": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".tldr", ".definition", ".faq"]
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are AI agent evals?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "AI agent evals are a fixed, repeatable test suite that scores an agent on real tasks. Unlike a single LLM eval that grades one response, an agent eval grades a full trajectory: did the agent finish, did it pick sensible tools, and were the tool calls correct. A practical setup is 30–100 hand-labeled cases scored on task success, trajectory quality, and tool correctness."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How many eval cases do I need to start?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Thirty hand-labeled cases is enough to start catching regressions. The marginal value drops fast after ~100 unless your task space is genuinely large. Most early-stage teams ship to ten thousand users on a 60-case eval set and would benefit more from labeling new failure modes than from doubling the existing set."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I use an LLM judge or human reviewers for agent evals?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use both, with a clear split. Score task success with code where possible — it's binary and cheap. Use an LLM judge for trajectory quality and tool-call sanity; calibrate it against 30–50 human-labeled cases first so you trust the scores. Reserve human review for the cases where the judge and the rule-based check disagree."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do AI agent evals need a special framework?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. A JSONL file of test cases plus a Python or TypeScript script that runs each case and writes results is a complete eval rig. Braintrust, LangSmith, Langfuse, and Promptfoo are nice to have for dashboards, but the first six months of evals can live in your repo with no extra dependencies."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should I run agent evals?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Run them on every change that touches the agent: prompt edits, tool changes, model swaps, even prompt-cache changes. They should run in CI like any other test. A 60-case suite on a Claude Sonnet or GPT-4-class model typically completes in 3–6 minutes with concurrency."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://jayzeedesign.github.io/superdesign-site/"},
+    {"@type": "ListItem", "position": 2, "name": "AI Agents", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"},
+    {"@type": "ListItem", "position": 3, "name": "AI Agent Evals", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agent-evals/"}
+  ]
+}
+</script>
+
+<style>
+  .article-wrap{padding:56px 0 24px}
+  .breadcrumb{font-size:13px;color:var(--text-dim);margin:0 0 18px;letter-spacing:.02em}
+  .breadcrumb a{color:var(--text-dim)}
+  .breadcrumb a:hover{color:var(--text);text-decoration:none}
+  .article-header{max-width:760px;margin:0 auto}
+  .article-header h1{font-size:clamp(30px,4vw,42px);line-height:1.1;margin:0 0 18px}
+  .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-dim);font-size:14px;margin:0 0 8px}
+  .article-meta .dot{opacity:.5}
+  .prose{max-width:760px;margin:0 auto;padding:8px 0 56px;font-size:18px;line-height:1.7}
+  .prose h2{font-size:clamp(24px,3vw,30px);margin:48px 0 14px;letter-spacing:-.01em}
+  .prose h3{font-size:20px;margin:28px 0 8px}
+  .prose p{color:var(--text);margin:0 0 16px}
+  .prose ul,.prose ol{color:var(--text);padding-left:22px;margin:0 0 18px}
+  .prose li{margin:0 0 8px}
+  .prose code{background:#161a23;border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:14px;color:#d6dbe7}
+  .prose pre{background:#0e1119;border:1px solid var(--border);padding:16px 18px;border-radius:12px;overflow-x:auto;margin:0 0 18px}
+  .prose pre code{background:none;border:0;padding:0}
+  .prose strong{color:#fff}
+  .tldr{
+    background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.06));
+    border:1px solid rgba(124,92,255,.35);
+    border-radius:var(--radius);
+    padding:22px 26px;margin:18px 0 28px;
+  }
+  .tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2)}
+  .tldr ul{margin:0;padding-left:20px}
+  .tldr li{color:var(--text);margin:6px 0}
+  .definition{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius);
+    padding:20px 22px;margin:24px 0;
+  }
+  .definition .label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px}
+  .definition .term{font-weight:700;color:#fff;margin:0 0 6px;font-size:18px}
+  .definition p{margin:0;color:var(--text-dim)}
+  .callout{
+    background:#11141b;border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 20px;margin:18px 0;color:var(--text-dim);font-size:16px;
+  }
+  .callout strong{color:#fff}
+  .faq{margin:32px 0 0}
+  .faq h2{margin-bottom:18px}
+  .faq details{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 20px;margin:0 0 10px;
+  }
+  .faq details[open]{border-color:rgba(124,92,255,.45)}
+  .faq summary{cursor:pointer;font-weight:600;color:#fff;list-style:none;font-size:17px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";float:right;color:var(--accent-2);font-size:22px;line-height:1}
+  .faq details[open] summary::after{content:"–"}
+  .faq details > p{margin:10px 0 0;color:var(--text-dim);font-size:16px;line-height:1.65}
+  .next-reads{margin:48px 0 8px}
+  .next-reads h2{margin-bottom:14px}
+  .next-reads ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .next-reads li{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .next-reads a{color:#fff;font-weight:600}
+  .next-reads p{margin:6px 0 0;color:var(--text-dim);font-size:14px}
+  .author-line{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:14px;margin:0 0 26px}
+  .author-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:inline-block}
+  @media (max-width:860px){
+    .article-wrap{padding:32px 0 16px}
+    .prose{font-size:17px}
+    .next-reads ul{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="../" aria-label="Superdesign home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Superdesign</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="../#how">How it works</a></li>
+        <li><a href="../#features">Features</a></li>
+        <li><a href="../ai-agents/">AI Agents</a></li>
+        <li><a href="../#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article-wrap">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a> &rsaquo; <a href="../ai-agents/">AI Agents</a> &rsaquo; <span>AI Agent Evals</span>
+      </nav>
+
+      <header class="article-header">
+        <p class="eyebrow">Cluster guide · AI agents</p>
+        <h1>AI Agent Evals: A Practical Setup for Early-Stage Teams</h1>
+        <p class="article-meta">
+          <span>Updated 27 May 2026</span><span class="dot">·</span>
+          <span>~9 min read</span><span class="dot">·</span>
+          <span>For founders shipping agents</span>
+        </p>
+        <p class="author-line"><span class="author-dot" aria-hidden="true"></span><span>By the Superdesign team</span></p>
+
+        <section class="tldr" aria-label="TL;DR">
+          <h2>TL;DR</h2>
+          <ul>
+            <li><strong>30 hand-labeled cases</strong> is the threshold where evals start catching real regressions. You can build that in a day.</li>
+            <li>Score on three axes: <strong>task success</strong> (binary), <strong>trajectory quality</strong> (LLM judge), and <strong>tool correctness</strong> (argument-level diff).</li>
+            <li>You do not need a framework. A JSONL file, a runner script, and a CI hook are the entire rig.</li>
+            <li>Run on every change that touches the agent — prompt, tools, model, even cache settings.</li>
+            <li>The biggest mistake is grading the final answer only. The bugs live in the <em>trajectory</em>.</li>
+          </ul>
+        </section>
+      </header>
+
+      <div class="prose">
+
+        <section class="definition" aria-label="Definition">
+          <p class="label">Definition</p>
+          <p class="term">AI agent evals</p>
+          <p>A fixed, repeatable test suite that scores an AI agent's behaviour on real tasks. Unlike single-response LLM evals, an agent eval grades the full multi-step trajectory: did the agent finish the task, did it pick sensible tools, and were the tool calls correct.</p>
+        </section>
+
+        <p>Most early-stage teams shipping AI agents in 2026 still do not have evals. They have vibes. They run the demo three times, decide it works, and merge. Two weeks later the agent regresses silently on a category of inputs they have never typed in person, and a Slack thread starts with "weird, this used to work."</p>
+
+        <p>This post is the eval setup we wish someone had handed us in week one. It is the cheapest 90% solution: thirty cases, three axes, twenty-four hours of focused work. It is deliberately not a research-grade harness — it is the founder-grade thing you can ship before lunch on a Wednesday.</p>
+
+        <p>If you have not read the <a href="../ai-agents/#evals">evals section of our AI agent pillar guide</a>, skim it first. This piece picks up where that one stops and walks you through the actual build.</p>
+
+        <h2 id="why-evals">Why agent evals are different from LLM evals</h2>
+
+        <p>An LLM eval grades one input → one output. Did the model summarise the document well? Did it classify the email correctly? You can do this with a CSV and a spreadsheet column.</p>
+
+        <p>An agent does not produce <em>one</em> output. It produces a trajectory — a sequence of model calls, tool invocations, and tool results, ending in some outcome. Three things can be wrong about a trajectory:</p>
+
+        <ol>
+          <li>The agent never finished. (Task failure.)</li>
+          <li>The agent finished but the path was bizarre. (Trajectory failure — five tool calls when one would do, or the agent ran in a circle for ten turns before stumbling onto the answer.)</li>
+          <li>The agent finished with a sane path, but one tool call had the wrong arguments. (Tool failure.)</li>
+        </ol>
+
+        <p>Grading only the final answer hides the second and third categories. They show up later as cost spikes, latency regressions, and the kind of "the agent does something weird sometimes" bug reports that are impossible to reproduce. Grade the trajectory.</p>
+
+        <h2 id="thirty-cases">Step 1 — Write 30 cases</h2>
+
+        <p>Spend an afternoon pulling 30 real tasks. <em>Real</em> is the operative word. Synthetic cases generated by another LLM will look comprehensive and miss exactly the bugs that bite you. Eval data lives in the same places product feedback lives:</p>
+
+        <ul>
+          <li>Your own usage logs. The first 100 traces from your private alpha are a goldmine — pick the 10 most interesting.</li>
+          <li>Bug reports. Every "the agent did X" complaint is a case waiting to be written.</li>
+          <li>Designer / non-engineer clicks. Hand the product to the least technical person on your team and watch what they try.</li>
+          <li>Adversarial inputs. What does the agent do when the user types nothing? Asks for something out of scope? Sends a five-page wall of text?</li>
+        </ul>
+
+        <p>For each case, write down four things: the user input, the expected final answer (or a regex / property that has to hold), the expected tools that should be called (a set, not a strict sequence), and the <em>shape</em> of the trajectory ("should call <code>search</code> at least once," "should never call <code>delete_user</code>").</p>
+
+        <p>Store this as a JSONL file in your repo. One case per line. The file is the asset; everything else is a script.</p>
+
+        <pre><code>{ "id": "case-001", "input": "Find the most recent invoice for ACME and email it to billing@acme.com",
+  "expected": { "final_contains": ["sent to billing@acme.com"],
+                "required_tools": ["search_invoices", "send_email"],
+                "forbidden_tools": ["delete_invoice"] } }</code></pre>
+
+        <h2 id="three-axes">Step 2 — Score on three axes</h2>
+
+        <p>For each case, compute three scores. Keep them separate; collapsing them into a single number loses signal.</p>
+
+        <h3>Task success — binary, rule-based</h3>
+        <p>Did the agent produce the right final outcome? This is where you use cheap rule-based grading: regex on the final response, a property check on the database, an assertion that an email was sent. Aim for this to be <em>code</em>, not an LLM. Code is free, deterministic, and trustworthy.</p>
+
+        <h3>Trajectory quality — LLM judge</h3>
+        <p>Was the path sensible? Did the agent thrash, loop, or reach the answer in a straight line? Use a strong model (Claude Sonnet, GPT-4-class) as a judge with a tight rubric and 3-5 calibrated examples. Score 1–5 or pass/fail; do not invent a 100-point scale you cannot anchor.</p>
+
+        <p>Calibrate the judge against 30–50 human-labeled cases <em>before</em> you trust its scores. Inter-rater agreement between you and the judge needs to be roughly κ ≥ 0.6 (substantial agreement) before the judge becomes a useful signal.</p>
+
+        <h3>Tool correctness — argument diff</h3>
+        <p>For each expected tool call, diff the actual arguments against an expected schema or value. This catches the silent regressions: the model that used to pass <code>{ user_id: "u_123" }</code> and now passes <code>{ userId: "u_123" }</code> after you changed the system prompt. This is also code — write it once, reuse it forever.</p>
+
+        <div class="callout">
+          <strong>Why three axes beat one number.</strong> A single accuracy metric drops 5% and you have no idea why. Three axes drop 5% and the dashboard tells you "task success steady, trajectory quality dropped 12%" — your agent now solves the same tasks but takes twice as long. You would have caught that exactly nowhere else.
+        </div>
+
+        <h2 id="runner">Step 3 — Build the runner (one script)</h2>
+
+        <p>The runner is a script that loads the JSONL, runs each case against your agent in parallel, captures the trace, scores it on the three axes, and writes results back to a results JSONL. That is the whole thing. ~200 lines of Python or TypeScript. No new dependency.</p>
+
+        <p>Three engineering tips that pay back later:</p>
+
+        <ul>
+          <li><strong>Persist full traces.</strong> Save the conversation, every tool call, every tool result. When a case fails, you want the trace, not a summary.</li>
+          <li><strong>Stable seeds where possible.</strong> Set <code>temperature: 0</code> for the eval runs. The signal you want is "did my change move the score," not "did a sampling roll change it."</li>
+          <li><strong>Concurrency cap.</strong> Run 5–10 cases in parallel. Rate-limit budgets are easy to blow on a 60-case suite. Provider 429s are slower than just being patient.</li>
+        </ul>
+
+        <p>Wire the runner into CI. Every PR that touches the agent runs the suite. Block merges on task-success regressions of more than one case. Flag (don't block) regressions on trajectory and tool-correctness — those need human eyes, not a red square in GitHub.</p>
+
+        <h2 id="dataset-care">Step 4 — Care for the dataset like product code</h2>
+
+        <p>Eval cases rot. They go stale when your product changes, when the model gets smarter, when your tool surface evolves. Treat the dataset like code: PRs to add cases, PRs to retire cases, a CODEOWNER who reviews changes. The set should grow by 1–3 cases a week from real bugs and shrink by 0–1 a week from retired surface area.</p>
+
+        <p>Two operational habits to build in week one:</p>
+
+        <ul>
+          <li><strong>"Every bug becomes a case."</strong> The PR that fixes a regression must include a new case that would have caught it. No exceptions. This is the only way the set stays representative.</li>
+          <li><strong>"Eval scores live in the PR description."</strong> A PR that touches the agent shows the three-axis score before / after. Reviewers read the diff <em>and</em> the score. This is the cultural move; the tooling is secondary.</li>
+        </ul>
+
+        <h2 id="memory-and-evals">Where evals meet memory and orchestration</h2>
+
+        <p>Two adjacent areas leak into your eval design and trip people up.</p>
+
+        <p>First, <strong>memory</strong>. If your agent has cross-task memory, your eval cases need a defined memory state. Most teams either reset to empty before each case (clean but unrealistic) or pre-seed a fixture profile (more realistic, more work). Pick one and document it. We unpack the patterns in <a href="../ai-agent-memory-patterns/">AI agent memory patterns</a> — the storage choice changes how you fixture your evals.</p>
+
+        <p>Second, <strong>orchestration</strong>. Multi-step orchestration frameworks (LangGraph, CrewAI, Mastra) make traces denser and harder to grade. Make sure your trace format is normalised before the judge sees it — strip framework noise, keep tool calls, model calls, and outcomes. Our framework comparison in <a href="../ai-agent-orchestration-framework/">AI agent orchestration framework comparison</a> notes which frameworks expose clean trace APIs and which require unwrapping.</p>
+
+        <h2 id="anti-patterns">Anti-patterns we keep seeing</h2>
+
+        <ul>
+          <li><strong>Grading only the final answer.</strong> You will miss regressions in trajectory and tool calls. See above.</li>
+          <li><strong>Using LLM judges without calibration.</strong> A poorly-prompted judge produces noisier scores than no eval at all, with a more confident dashboard. Calibrate or do not ship the judge.</li>
+          <li><strong>Letting the eval set grow past 500 cases without pruning.</strong> Once your suite takes 30+ minutes, engineers stop running it locally. The set has the wrong shape.</li>
+          <li><strong>"We have evals" meaning a Notion page of example prompts.</strong> A list of prompts is not an eval; you cannot run it on every PR.</li>
+          <li><strong>Confusing eval pass rate with product quality.</strong> A 95% pass rate on the wrong cases is a worse signal than 70% on the right ones. The dataset is the asset.</li>
+        </ul>
+
+        <h2 id="when-to-level-up">When to graduate from this setup</h2>
+
+        <p>The 30-case / three-axis rig holds well from prototype to roughly a few thousand users. You will know it is time to level up when:</p>
+
+        <ul>
+          <li>Your eval suite stops surfacing bugs your real users still hit. (Coverage gap — add cases from production traces.)</li>
+          <li>You can no longer trace a score change to a code change. (Move evals onto a managed platform — Braintrust, LangSmith, Langfuse — with experiment tracking.)</li>
+          <li>You ship more than once a day. (Add an online-evals layer — a slim judge running on a sample of production traffic, surfacing live regressions.)</li>
+        </ul>
+
+        <p>None of those graduations matter on day one. Ship the JSONL and the runner first. The rest follows from real pressure, not imagined future scale.</p>
+
+        <h2 id="faq">FAQ</h2>
+
+        <section class="faq" aria-label="Frequently asked questions">
+
+          <details>
+            <summary>What are AI agent evals?</summary>
+            <p>A fixed, repeatable test suite that scores an AI agent's behavior on real tasks. Unlike a single-response LLM eval, an agent eval grades the full multi-step trajectory: did the agent finish, did it pick sensible tools, and were the tool calls correct.</p>
+          </details>
+
+          <details>
+            <summary>How many eval cases do I need to start?</summary>
+            <p>Thirty hand-labeled cases is enough to start catching regressions. The marginal value drops fast after ~100 unless your task space is genuinely large. Most early-stage teams ship to ten thousand users on a 60-case suite and benefit more from labeling new failure modes than from doubling the existing set.</p>
+          </details>
+
+          <details>
+            <summary>Should I use an LLM judge or human reviewers?</summary>
+            <p>Both, with a split. Score task success with code (binary, cheap). Use an LLM judge for trajectory quality and tool sanity; calibrate it against 30–50 human-labeled cases first. Reserve human review for cases where the judge and the rule-based check disagree.</p>
+          </details>
+
+          <details>
+            <summary>Do AI agent evals need a special framework?</summary>
+            <p>No. A JSONL file of test cases plus a Python or TypeScript runner script is a complete rig. Braintrust, LangSmith, Langfuse, and Promptfoo are nice to have for dashboards, but your first six months of evals can live in your repo with no extra dependencies.</p>
+          </details>
+
+          <details>
+            <summary>When should I run agent evals?</summary>
+            <p>On every change that touches the agent: prompt edits, tool changes, model swaps, even prompt-cache changes. They belong in CI. A 60-case suite on a Sonnet or GPT-4-class model typically completes in 3–6 minutes with concurrency.</p>
+          </details>
+
+          <details>
+            <summary>How is grading the final answer different from grading the trajectory?</summary>
+            <p>Final-answer grading misses three classes of bug: silent tool failures the agent recovered from, paths that doubled in length, and the model passing slightly-wrong arguments to a tool that still succeeded. Trajectory grading catches all three. Both matter — but trajectory is where most regressions live.</p>
+          </details>
+
+        </section>
+
+        <section class="next-reads" aria-label="Continue reading">
+          <h2>Continue reading the AI agents cluster</h2>
+          <ul>
+            <li><a href="../ai-agents/">How to build an AI agent</a><p>The full pillar guide — architecture, memory, evals, orchestration, observability.</p></li>
+            <li><a href="../ai-agent-memory-patterns/">AI agent memory patterns</a><p>Working, episodic, and semantic memory — and how each one shapes your eval fixtures.</p></li>
+            <li><a href="../ai-agent-vs-llm-workflow/">AI agent vs. LLM workflow</a><p>If a workflow would do, evals get a lot cheaper. Here is how to decide.</p></li>
+            <li><a href="../ai-agent-orchestration-framework/">Orchestration framework comparison</a><p>LangGraph, CrewAI, Autogen, Mastra — and which expose clean trace APIs for evals.</p></li>
+          </ul>
+        </section>
+
+        <div class="callout" style="margin-top:40px">
+          <strong>Building an AI product?</strong> Superdesign is an AI design agent for early-stage founders building AI products. If the UI is the bottleneck on your launch, <a href="../#contact">talk to us</a>.
+        </div>
+
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <p>&copy; <span>2026</span> Superdesign. An AI design agent for founders building AI products.</p>
+    <ul class="footer-nav">
+      <li><a href="../">Home</a></li>
+      <li><a href="../ai-agents/">AI Agents</a></li>
+      <li><a href="../#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Agent Memory Patterns: Working, Episodic, and Semantic (2026)</title>
+<meta name="description" content="The three kinds of memory in a production AI agent — working, episodic, and semantic — and how to pick the right storage for each without bolting a vector DB onto everything.">
+<link rel="canonical" href="https://jayzeedesign.github.io/superdesign-site/ai-agent-memory-patterns/">
+<meta name="theme-color" content="#0b0d12">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<!-- Search engine verification (SUP-10). -->
+<!-- <meta name="google-site-verification" content="REPLACE_WITH_GSC_TOKEN"> -->
+<!-- <meta name="msvalidate.01" content="REPLACE_WITH_BING_WMT_TOKEN"> -->
+<meta name="indexnow" content="5bdc3cf653e9a956f932ad416367e882">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI Agent Memory Patterns: Working, Episodic, and Semantic">
+<meta property="og:description" content="The three kinds of agent memory — and the storage that fits each. Stop bolting a vector DB onto problems that don't need one.">
+<meta property="og:url" content="https://jayzeedesign.github.io/superdesign-site/ai-agent-memory-patterns/">
+<meta property="og:site_name" content="Superdesign">
+<meta property="og:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="AI agent memory patterns — Superdesign cluster guide">
+<meta property="article:published_time" content="2026-05-27">
+<meta property="article:modified_time" content="2026-05-27">
+<meta property="article:section" content="AI Agents">
+<meta property="article:tag" content="AI agents">
+<meta property="article:tag" content="Memory architecture">
+<meta property="article:tag" content="AI engineering">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI Agent Memory Patterns: Working, Episodic, and Semantic">
+<meta name="twitter:description" content="Three kinds of memory, three storage choices. Stop putting everything in a vector DB.">
+<meta name="twitter:image" content="https://jayzeedesign.github.io/superdesign-site/og.svg">
+
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preload" as="style" href="../styles.css">
+<link rel="stylesheet" href="../styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "AI Agent Memory Patterns: Working, Episodic, and Semantic (2026)",
+  "description": "Three kinds of memory in a production AI agent — working, episodic, and semantic — and how to pick the right storage for each.",
+  "datePublished": "2026-05-27",
+  "dateModified": "2026-05-27",
+  "inLanguage": "en",
+  "url": "https://jayzeedesign.github.io/superdesign-site/ai-agent-memory-patterns/",
+  "mainEntityOfPage": "https://jayzeedesign.github.io/superdesign-site/ai-agent-memory-patterns/",
+  "image": "https://jayzeedesign.github.io/superdesign-site/og.svg",
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Early-stage founders building AI products"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Superdesign",
+    "url": "https://jayzeedesign.github.io/superdesign-site/"
+  },
+  "about": [
+    {"@type": "Thing", "name": "AI agent memory"},
+    {"@type": "Thing", "name": "LLM context management"},
+    {"@type": "Thing", "name": "Vector databases"}
+  ],
+  "isPartOf": {
+    "@type": "CreativeWork",
+    "name": "How to Build an AI Agent",
+    "url": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".tldr", ".definition", ".faq"]
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are the three types of AI agent memory?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Working memory holds state within a single task (the conversation, scratchpad, intermediate tool outputs). Episodic memory holds what happened across past tasks for one user (preferences, prior decisions, things you have already tried). Semantic memory is a corpus the agent can search at retrieval time (docs, tickets, product knowledge). Each wants different storage."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need a vector database for an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only for semantic memory, and only if you actually have a corpus to search. Most early-stage agents have a working-memory problem and an episodic-memory problem, not a retrieval problem. Bolting a vector DB onto every memory need produces fuzzy similarity matches over fragments that should have been stored in a database with foreign keys."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I keep an AI agent from forgetting context within a task?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use working memory deliberately. Put the conversation in the message history, put intermediate tool outputs in a scratchpad the agent can re-read, and summarize older turns when the context grows past 60 percent of the model's window. Aggressive trimming and a clean summary beat appending forever."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where should I store user preferences for an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In a relational table keyed by user id, not a vector database. Preferences are structured, queryable, editable, and frequently updated — all properties relational stores handle well and vector indexes handle badly. Inject a short summary into the system prompt or retrieve relevant fields on demand."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does memory affect AI agent evaluation?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Memory changes the eval contract: results depend on prior state, not just the current input. Either reset memory to a known state before every eval case, or pre-seed a fixture profile. Document the choice and keep it consistent — non-deterministic memory state is the largest source of flaky agent evals."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://jayzeedesign.github.io/superdesign-site/"},
+    {"@type": "ListItem", "position": 2, "name": "AI Agents", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agents/"},
+    {"@type": "ListItem", "position": 3, "name": "AI Agent Memory Patterns", "item": "https://jayzeedesign.github.io/superdesign-site/ai-agent-memory-patterns/"}
+  ]
+}
+</script>
+
+<style>
+  .article-wrap{padding:56px 0 24px}
+  .breadcrumb{font-size:13px;color:var(--text-dim);margin:0 0 18px;letter-spacing:.02em}
+  .breadcrumb a{color:var(--text-dim)}
+  .breadcrumb a:hover{color:var(--text);text-decoration:none}
+  .article-header{max-width:760px;margin:0 auto}
+  .article-header h1{font-size:clamp(30px,4vw,42px);line-height:1.1;margin:0 0 18px}
+  .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-dim);font-size:14px;margin:0 0 8px}
+  .article-meta .dot{opacity:.5}
+  .prose{max-width:760px;margin:0 auto;padding:8px 0 56px;font-size:18px;line-height:1.7}
+  .prose h2{font-size:clamp(24px,3vw,30px);margin:48px 0 14px;letter-spacing:-.01em}
+  .prose h3{font-size:20px;margin:28px 0 8px}
+  .prose p{color:var(--text);margin:0 0 16px}
+  .prose ul,.prose ol{color:var(--text);padding-left:22px;margin:0 0 18px}
+  .prose li{margin:0 0 8px}
+  .prose code{background:#161a23;border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:14px;color:#d6dbe7}
+  .prose pre{background:#0e1119;border:1px solid var(--border);padding:16px 18px;border-radius:12px;overflow-x:auto;margin:0 0 18px}
+  .prose pre code{background:none;border:0;padding:0}
+  .prose strong{color:#fff}
+  .tldr{
+    background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.06));
+    border:1px solid rgba(124,92,255,.35);
+    border-radius:var(--radius);
+    padding:22px 26px;margin:18px 0 28px;
+  }
+  .tldr h2{margin:0 0 10px;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2)}
+  .tldr ul{margin:0;padding-left:20px}
+  .tldr li{color:var(--text);margin:6px 0}
+  .definition{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius);
+    padding:20px 22px;margin:24px 0;
+  }
+  .definition .label{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px}
+  .definition .term{font-weight:700;color:#fff;margin:0 0 6px;font-size:18px}
+  .definition p{margin:0;color:var(--text-dim)}
+  .callout{
+    background:#11141b;border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 20px;margin:18px 0;color:var(--text-dim);font-size:16px;
+  }
+  .callout strong{color:#fff}
+  .stack-table{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:15px}
+  .stack-table th,.stack-table td{border:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top}
+  .stack-table th{background:#11141b;color:#fff;font-weight:600}
+  .stack-table td{color:var(--text-dim)}
+  .stack-table code{font-size:13px}
+  .faq{margin:32px 0 0}
+  .faq h2{margin-bottom:18px}
+  .faq details{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 20px;margin:0 0 10px;
+  }
+  .faq details[open]{border-color:rgba(124,92,255,.45)}
+  .faq summary{cursor:pointer;font-weight:600;color:#fff;list-style:none;font-size:17px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";float:right;color:var(--accent-2);font-size:22px;line-height:1}
+  .faq details[open] summary::after{content:"–"}
+  .faq details > p{margin:10px 0 0;color:var(--text-dim);font-size:16px;line-height:1.65}
+  .next-reads{margin:48px 0 8px}
+  .next-reads h2{margin-bottom:14px}
+  .next-reads ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .next-reads li{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .next-reads a{color:#fff;font-weight:600}
+  .next-reads p{margin:6px 0 0;color:var(--text-dim);font-size:14px}
+  .author-line{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:14px;margin:0 0 26px}
+  .author-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:inline-block}
+  @media (max-width:860px){
+    .article-wrap{padding:32px 0 16px}
+    .prose{font-size:17px}
+    .next-reads ul{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="../" aria-label="Superdesign home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Superdesign</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="../#how">How it works</a></li>
+        <li><a href="../#features">Features</a></li>
+        <li><a href="../ai-agents/">AI Agents</a></li>
+        <li><a href="../#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article-wrap">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a> &rsaquo; <a href="../ai-agents/">AI Agents</a> &rsaquo; <span>AI Agent Memory Patterns</span>
+      </nav>
+
+      <header class="article-header">
+        <p class="eyebrow">Cluster guide · AI agents</p>
+        <h1>AI Agent Memory Patterns: Working, Episodic, and Semantic</h1>
+        <p class="article-meta">
+          <span>Updated 27 May 2026</span><span class="dot">·</span>
+          <span>~9 min read</span><span class="dot">·</span>
+          <span>For founders shipping agents</span>
+        </p>
+        <p class="author-line"><span class="author-dot" aria-hidden="true"></span><span>By the Superdesign team</span></p>
+
+        <section class="tldr" aria-label="TL;DR">
+          <h2>TL;DR</h2>
+          <ul>
+            <li>Agent memory is <strong>three different problems</strong> — working, episodic, and semantic — that want three different storage layers.</li>
+            <li><strong>Working memory</strong> lives in the context window. Trim aggressively; the model pays more attention to short contexts.</li>
+            <li><strong>Episodic memory</strong> (user preferences, prior decisions) belongs in a relational table, not a vector index.</li>
+            <li><strong>Semantic memory</strong> is the one a vector DB is for — and only if you have a real corpus.</li>
+            <li>The fastest agent-quality win in early teams is usually <em>removing</em> memory infrastructure, not adding more.</li>
+          </ul>
+        </section>
+      </header>
+
+      <div class="prose">
+
+        <section class="definition" aria-label="Definition">
+          <p class="label">Definition</p>
+          <p class="term">AI agent memory</p>
+          <p>Any persistence layer that lets an AI agent reference state beyond a single model call. Includes within-task scratchpads, across-task user history, and searchable knowledge corpora. The right storage depends on access pattern, not on what the tutorial said to use.</p>
+        </section>
+
+        <p>"How do I give my agent memory?" is the single most common question we get from early-stage founders, and almost every time the real answer is: you already have memory; you are just calling it the wrong thing. The conversation history is memory. The Postgres row with user preferences is memory. The vector index of past tickets is memory. They are <em>different</em> kinds of memory, and conflating them is what produces the bolt-everything-into-Pinecone architectures that quietly degrade agents in production.</p>
+
+        <p>This piece is the framework we use internally for picking the right memory layer per use case. It pairs with the <a href="../ai-agents/#memory">memory section of our AI agent pillar guide</a>, which gives the conceptual frame — here we go deeper on patterns and storage choices.</p>
+
+        <h2 id="three-types">The three types of agent memory</h2>
+
+        <p>From cognitive science, borrowed liberally and pragmatised for software engineers:</p>
+
+        <ul>
+          <li><strong>Working memory</strong> — the state of the current task. Lives in the context window. Ephemeral by definition.</li>
+          <li><strong>Episodic memory</strong> — what happened across past tasks <em>for this user</em>. Preferences, history, "things we have already tried." Durable, user-scoped.</li>
+          <li><strong>Semantic memory</strong> — knowledge about the world that is not user-specific. Product docs, internal wikis, past tickets. Durable, organisation-scoped, often large.</li>
+        </ul>
+
+        <p>Each one has a different access pattern, a different update frequency, and a different correct storage choice. Picking the wrong store for one of them is a top-five reason agents misbehave under load.</p>
+
+        <h2 id="working-memory">Working memory: the context window is the database</h2>
+
+        <p>Working memory is the simplest of the three because the storage is already given to you: the message array you pass to the model on each call. The hard part is not where to put it — it is how to keep it from rotting.</p>
+
+        <p>Three patterns that consistently work:</p>
+
+        <h3>1. The scratchpad pattern</h3>
+        <p>Give the agent a "scratchpad" tool — append-only notes the agent can read on subsequent turns. This sounds redundant with the conversation, but it works for a real reason: the model is much better at re-reading its own structured notes than at re-parsing past tool outputs. Anthropic and OpenAI both ship variations of this in their agent SDKs for the same reason.</p>
+
+        <h3>2. The compression pattern</h3>
+        <p>When the conversation grows past 50–70% of the model's context window, summarise older turns into a single "Summary so far" system message and drop the original turns. This is not free — summaries lose detail — but it is much better than the alternative, which is the model paying degrading attention to every turn as the window fills.</p>
+
+        <h3>3. The structured-state pattern</h3>
+        <p>For agents that work on long-running objects (a document, a design, a piece of code), do not put the object itself in the conversation. Put a <em>handle</em> to the object — an ID or a structured representation the agent can mutate via tool calls. The conversation stays tiny; the object lives in your database. Cursor and Claude Code both work this way.</p>
+
+        <div class="callout">
+          <strong>Heuristic:</strong> if your agent's average context length grows linearly with turn count, you have a working-memory bug, not a "we need bigger context windows" problem. Models with a 1M-token context still pay shrinking attention as the window fills. Treat the budget as ~50–100K useful tokens regardless of advertised maximum.
+        </div>
+
+        <h2 id="episodic-memory">Episodic memory: boring storage beats clever retrieval</h2>
+
+        <p>Episodic memory is where most teams go wrong. The seductive idea is: "I will write every user interaction to a vector index, then retrieve relevant chunks at runtime." The reality: similarity search over user history returns plausible-sounding but topically wrong fragments, and the agent confidently builds a wrong answer on top.</p>
+
+        <p>Episodic memory is structured. Use structured storage. The pattern that works:</p>
+
+        <ul>
+          <li>A <code>user_facts</code> table keyed by user ID. Columns for the things you actually need: timezone, current project, role, declared preferences. Updatable. Auditable. Queryable.</li>
+          <li>A <code>user_history</code> table of past tasks. One row per completed task, with input, outcome, and a short LLM-generated summary.</li>
+          <li>At task start, the agent runs a <code>get_user_context(user_id)</code> tool that pulls the facts row plus the 3–5 most recent history rows and returns them as a structured block.</li>
+        </ul>
+
+        <p>That is it. No embeddings. No similarity search. No drift. The cost is one database query at task start; the benefit is deterministic, debuggable user context. When you eventually do need similarity over history — say, "have I done a task like this before?" — you can add an embedding column to <code>user_history</code> later. Premature retrieval is the new premature optimisation.</p>
+
+        <h2 id="semantic-memory">Semantic memory: the only place a vector DB earns its keep</h2>
+
+        <p>Semantic memory is the corpus the agent searches at retrieval time. This is where vector databases actually fit. If you have:</p>
+
+        <ul>
+          <li>Thousands of documents the agent might need to consult, and</li>
+          <li>No way to know in advance which ones,</li>
+        </ul>
+
+        <p>...then embedding-based retrieval (or hybrid keyword + vector) is the right tool. Pinecone, Weaviate, Qdrant, pgvector, Turbopuffer — all fine. The choice between them matters far less than the choice to actually have a corpus worth searching.</p>
+
+        <p>Three patterns that we keep recommending:</p>
+
+        <ul>
+          <li><strong>Hybrid retrieval beats pure vector.</strong> Combine BM25 / keyword matching with semantic similarity, then rerank. Pure cosine similarity on small chunks misses exact-match queries (product names, error codes) that BM25 nails.</li>
+          <li><strong>Chunking matters more than the vector DB.</strong> Chunk by semantic boundary (headings, paragraphs) not by token count. A 400-token chunk that ends mid-sentence costs you retrieval quality forever.</li>
+          <li><strong>Always return the source.</strong> The agent should see the retrieved chunk <em>and</em> a citation. Sourceless retrieval makes hallucination indistinguishable from real answers.</li>
+        </ul>
+
+        <h2 id="storage-matrix">Pick the right storage</h2>
+
+        <table class="stack-table" aria-label="Memory storage matrix">
+          <thead>
+            <tr><th>Memory type</th><th>Storage</th><th>Access pattern</th><th>Anti-pattern</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Working</td>
+              <td>Context window + scratchpad tool</td>
+              <td>Append, trim, summarise</td>
+              <td>Letting context grow unbounded</td>
+            </tr>
+            <tr>
+              <td>Episodic</td>
+              <td>Relational (Postgres/SQLite)</td>
+              <td>Lookup by user_id; recent N rows</td>
+              <td>Vector search over user history</td>
+            </tr>
+            <tr>
+              <td>Semantic</td>
+              <td>Vector + keyword hybrid</td>
+              <td>Query at task time, return chunks + cite</td>
+              <td>Embedding a corpus you do not actually search</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 id="anti-patterns">Anti-patterns that destroy agents quietly</h2>
+
+        <ul>
+          <li><strong>"Memory" as a single bag.</strong> Stuffing chat history, preferences, and docs into one vector index produces results that are subtly wrong in subtly different ways. Split the memory.</li>
+          <li><strong>Forgetting to TTL working memory.</strong> A scratchpad without expiry becomes a budget hog. Set a per-task limit; archive on completion.</li>
+          <li><strong>Treating episodic memory as immutable.</strong> Users change. Preferences change. If the agent cannot update what it learned about a user last week, the system is brittle.</li>
+          <li><strong>RAG without grounding.</strong> Returning chunks without citations forces the model to hallucinate fluently. Always pass source IDs through.</li>
+          <li><strong>Embedding everything.</strong> Embeddings are not free — storage, latency, refresh costs. Embed corpora you actually retrieve from, nothing else.</li>
+        </ul>
+
+        <h2 id="evals-and-memory">Memory and evals are linked</h2>
+
+        <p>Memory changes your eval contract. An eval case is no longer <em>just</em> a function of input — it is a function of input <em>and</em> memory state. There are two reasonable patterns:</p>
+
+        <ul>
+          <li><strong>Reset before each case.</strong> Working memory is empty; episodic memory points at a fresh fixture user. Clean signal, less realistic.</li>
+          <li><strong>Pre-seeded fixtures.</strong> Each case names a fixture profile (e.g., "<code>user_with_3_invoices</code>") that the runner sets up first. More realistic; more state to maintain.</li>
+        </ul>
+
+        <p>Whichever you pick, document it. The largest source of flaky agent evals we see is undeclared memory state — the case passes locally because your dev account has a quirk and fails in CI because the CI account does not.</p>
+
+        <p>If you have not built evals yet, start with <a href="../ai-agent-evals/">our practical AI agent eval setup</a> and pick the reset-before-each-case pattern. Move to fixtures only when reset becomes unrealistic.</p>
+
+        <h2 id="when-to-evolve">When to evolve your memory architecture</h2>
+
+        <p>Most teams over-engineer memory in week one and under-evolve it after launch. Two signs you need to invest more:</p>
+
+        <ul>
+          <li><strong>"The agent forgot what I told it yesterday."</strong> Episodic memory is missing or under-used. Add a <code>user_facts</code> table and a <code>get_user_context</code> tool before anything else.</li>
+          <li><strong>"The agent answers from outdated knowledge."</strong> Semantic memory is missing or stale. Either add a real RAG layer with citations, or restrict the agent's scope to what it can do without world knowledge.</li>
+        </ul>
+
+        <p>The pattern that destroys agents is the inverse: shipping a vector DB before you know what is in it, then debugging similarity-score weirdness for a week.</p>
+
+        <h2 id="faq">FAQ</h2>
+
+        <section class="faq" aria-label="Frequently asked questions">
+
+          <details>
+            <summary>What are the three types of AI agent memory?</summary>
+            <p>Working memory holds state within a single task (the conversation, scratchpad, intermediate tool outputs). Episodic memory holds what happened across past tasks for one user (preferences, prior decisions, things you have already tried). Semantic memory is a corpus the agent can search at retrieval time (docs, tickets, product knowledge). Each wants different storage.</p>
+          </details>
+
+          <details>
+            <summary>Do I need a vector database for an AI agent?</summary>
+            <p>Only for semantic memory, and only if you actually have a corpus to search. Most early-stage agents have a working-memory problem and an episodic-memory problem, not a retrieval problem. Bolting a vector DB onto every memory need produces fuzzy similarity matches over fragments that should have been stored in a database with foreign keys.</p>
+          </details>
+
+          <details>
+            <summary>How do I keep an AI agent from forgetting context within a task?</summary>
+            <p>Use working memory deliberately. Put the conversation in the message history, put intermediate tool outputs in a scratchpad the agent can re-read, and summarize older turns when the context grows past 60% of the model's window. Aggressive trimming and a clean summary beat appending forever.</p>
+          </details>
+
+          <details>
+            <summary>Where should I store user preferences for an AI agent?</summary>
+            <p>In a relational table keyed by user_id, not a vector database. Preferences are structured, queryable, editable, and frequently updated — properties relational stores handle well and vector indexes handle badly. Inject a short summary into the system prompt or fetch on demand.</p>
+          </details>
+
+          <details>
+            <summary>How does memory affect AI agent evaluation?</summary>
+            <p>Memory changes the eval contract: results depend on prior state, not just current input. Either reset memory to a known state before every eval case, or pre-seed a fixture profile. Document the choice and keep it consistent — non-deterministic memory state is the largest source of flaky agent evals.</p>
+          </details>
+
+          <details>
+            <summary>What's the difference between RAG and agent memory?</summary>
+            <p>RAG is one technique for one type of memory — semantic. An agent's full memory stack includes working memory (context window state) and episodic memory (per-user history). Calling all of it "RAG" obscures the design choices that matter.</p>
+          </details>
+
+        </section>
+
+        <section class="next-reads" aria-label="Continue reading">
+          <h2>Continue reading the AI agents cluster</h2>
+          <ul>
+            <li><a href="../ai-agents/">How to build an AI agent</a><p>The full pillar guide — architecture, memory, evals, orchestration, observability.</p></li>
+            <li><a href="../ai-agent-evals/">AI agent evals</a><p>How to score an agent on three axes — and why memory state changes your fixtures.</p></li>
+            <li><a href="../ai-agent-vs-llm-workflow/">AI agent vs. LLM workflow</a><p>Workflows often need no memory at all. Here is how to decide which you are building.</p></li>
+            <li><a href="../ai-agent-orchestration-framework/">Orchestration framework comparison</a><p>Which frameworks ship batteries for memory, and which ones leave it to you.</p></li>
+          </ul>
+        </section>
+
+        <div class="callout" style="margin-top:40px">
+          <strong>Building an AI product?</strong> Superdesign is an AI design agent for early-stage founders building AI products. If the UI is the bottleneck on your launch, <a href="../#contact">talk to us</a>.
+        </div>
+
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <p>&copy; <span>2026</span> Superdesign. An AI design agent for founders building AI products.</p>
+    <ul class="footer-nav">
+      <li><a href="../">Home</a></li>
+      <li><a href="../ai-agents/">AI Agents</a></li>
+      <li><a href="../#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
